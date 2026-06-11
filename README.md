@@ -10,7 +10,7 @@
   </p>
 </div>
 
-## Tentacle Wallet `tpay`
+## Tentacle Wallet (`tpay`)
 
 Tentacle Wallet lets your agents spend in control — built for autonomous agents on Sui. Inspired by [pay.sh](https://pay.sh).
 
@@ -18,7 +18,7 @@ Tentacle Wallet lets your agents spend in control — built for autonomous agent
 
 - **Made for agents** — Your agent holds it and pays on its own. No human in the loop.
 - **Rules it can't break** — Set the limits. The wallet enforces them on every spend.
-- **Pay across chains** — Pay in Sui — it settles on the destination chain. Built right in.
+<!--- **Pay across chains** — Pay in Sui — it settles on the destination chain. Built right in.-->
 
 ## How it works
 
