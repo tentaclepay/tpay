@@ -10,9 +10,9 @@
   </p>
 </div>
 
-## Tentacle Wallet (`tpay`)
+## Tentacle Pay Wallet (`tpay`)
 
-Tentacle Wallet lets your agents spend in control — built for autonomous agents on Sui. Inspired by [pay.sh](https://pay.sh).
+Tentacle Pay Wallet lets your agents spend in control — built for autonomous agents on Sui. Inspired by [pay.sh](https://pay.sh).
 
 ## Features
 
@@ -22,7 +22,7 @@ Tentacle Wallet lets your agents spend in control — built for autonomous agent
 
 ## How it works
 
-Without Tentacle Wallet, agents hit paywalled APIs and stall:
+Without Tentacle Pay Wallet, agents hit paywalled APIs and stall:
 
 ```sh
 $ curl https://api.weather.ai/forecast
