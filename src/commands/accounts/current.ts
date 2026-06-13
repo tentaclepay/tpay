@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { loadAccountConfig } from "../../accounts";
 import { balanceHandler } from "../../handlers/accounts/balance";
 import { getState } from "../../state";
 
@@ -10,7 +9,8 @@ export const currentCommand = defineCommand({
   run: async () => {
     const network = getState("network");
 
-    const label = (await loadAccountConfig()).default;
+    const label = getState("account");
+    if (!label) return console.error(`No wallet found. Run "tpay setup"`);
 
     const balanceResult = await balanceHandler({
       label,
@@ -19,10 +19,9 @@ export const currentCommand = defineCommand({
 
     if (!balanceResult.success) {
       switch (balanceResult.error) {
+        case "no_wallet":
         case "wallet_not_exists":
-          return console.error(`Wallet with label "${label}" was not exists`);
-        case "invalid_keystore":
-          return console.error(`Wallet stored in invalid keystore`);
+          return console.error(`No wallet found. Run "tpay setup"`);
         default:
           return console.error(`Unknown error occured`);
       }

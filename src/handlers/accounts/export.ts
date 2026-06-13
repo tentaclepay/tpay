@@ -1,7 +1,12 @@
-import type { BiometricsKeystore, Handler } from "../../types";
+import type { Handler } from "../../types";
 import type { Result } from "../../utils/result";
-import { getAccount, loadAccountConfig } from "../../accounts";
-import { getKeystore as getAppleKeychain } from "../../lib/keystore/apple-keychain";
+import {
+  getAccount,
+  isAccountConfigExists,
+  loadAccountConfig,
+} from "../../accounts";
+import { getKeystore } from "../../lib/keystore";
+import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
 type ExportHandlersInput = {
@@ -14,10 +19,10 @@ type ExportHandlerData = {
   secretKey: string;
 };
 type ExportHandlerError =
+  | "no_wallet"
   | "wallet_not_exists"
   | "unsupported_keystore"
-  | "biometrics_verification_failed"
-  | "keystore_function_fail";
+  | "verification_failed";
 type ExportHandlerOutput = Promise<
   Result<ExportHandlerData, ExportHandlerError>
 >;
@@ -27,38 +32,33 @@ export const exportHandler: Handler<
   ExportHandlerOutput
 > = async ({ label }) => {
   try {
+    if (!(await isAccountConfigExists())) return fail("no_wallet");
+
     const accountConfig = await loadAccountConfig();
 
-    const account = getAccount<BiometricsKeystore>(accountConfig, label);
+    const account = getAccount(accountConfig, label);
     if (!account) return fail("wallet_not_exists");
 
-    let secretKey: string;
-    switch (account.auth.keystore) {
-      case "apple-keychain": {
-        const getResult = await getAppleKeychain(label, true);
-        if (!getResult.success) {
-          switch (getResult.error) {
-            case "biometrics_fail":
-              return fail("biometrics_verification_failed");
-            case "not_found":
-              return fail("keystore_function_fail");
-            default:
-              return fail("unknown_error");
-          }
-        }
+    switch (account.keystore) {
+      case "platform": {
+        const verified = await promptVerification(
+          account.keystore,
+          `get wallet "${label}"`
+        );
+        if (!verified) return fail("verification_failed");
 
-        secretKey = getResult.data;
-        break;
+        const secretKey = await getKeystore(account.label);
+        if (!secretKey) return fail("wallet_not_exists");
+
+        return ok({
+          label: account.label,
+          address: account.address,
+          secretKey,
+        });
       }
       default:
         return fail("unsupported_keystore");
     }
-
-    return ok({
-      label: account.label,
-      address: account.address,
-      secretKey,
-    });
   } catch (err) {
     return fail("unknown_error");
   }

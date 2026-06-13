@@ -1,14 +1,5 @@
 import { defineCommand } from "citty";
 
-import { balanceCommand } from "./balance";
-import { currentCommand } from "./current";
-import { defaultCommand } from "./default";
-import { exportCommand } from "./export";
-import { importCommand } from "./import";
-import { listCommand } from "./list";
-import { newCommand } from "./new";
-import { removeCommand } from "./remove";
-
 export const accountCommand = defineCommand({
   meta: { name: "account", description: "Account" },
   args: {
@@ -19,13 +10,13 @@ export const accountCommand = defineCommand({
     },
   },
   subCommands: {
-    balance: balanceCommand,
-    current: currentCommand,
-    new: newCommand,
-    list: listCommand,
-    import: importCommand,
-    export: exportCommand,
-    remove: removeCommand,
-    default: defaultCommand,
+    balance: () => import("./balance").then((m) => m.balanceCommand),
+    current: () => import("./current").then((m) => m.currentCommand),
+    new: () => import("./new").then((m) => m.newCommand),
+    list: () => import("./list").then((m) => m.listCommand),
+    import: () => import("./import").then((m) => m.importCommand),
+    export: () => import("./export").then((m) => m.exportCommand),
+    remove: () => import("./remove").then((m) => m.removeCommand),
+    default: () => import("./default").then((m) => m.defaultCommand),
   },
 });

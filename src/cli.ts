@@ -1,17 +1,18 @@
-import { defineCommand, runMain } from "citty";
+import chalk from "chalk";
+import { defineCommand, renderUsage, runMain } from "citty";
 
-import { getAccount, loadAccountConfig } from "./accounts";
-import { accountCommand } from "./commands/accounts";
-import { curlCommand } from "./commands/curl";
-import { setupCommand } from "./commands/setup";
-import { wgetCommand } from "./commands/wget";
+import {
+  isAccountConfigExists,
+  isAccountExist,
+  loadAccountConfig,
+} from "./accounts";
 import { DEFAULT_NETWORK } from "./constant";
 import { setState } from "./state";
 import { initTpay } from "./utils/init";
 
 const passThroughCommands = {
-  curl: curlCommand,
-  wget: wgetCommand,
+  curl: () => import("./commands/curl").then((m) => m.curlCommand),
+  wget: () => import("./commands/wget").then((m) => m.wgetCommand),
 };
 
 const main = defineCommand({
@@ -39,25 +40,41 @@ const main = defineCommand({
 
     setState("network", args.network);
 
+    if (!(await isAccountConfigExists())) return;
+
     const accountConfig = await loadAccountConfig();
 
     if (args.account) {
-      const existingAccount = getAccount(accountConfig, args.account);
+      const existingAccount = isAccountExist(accountConfig, args.account);
       if (!existingAccount)
         return console.error(
           `Account with label "${args.account}" didn't exist`
         );
 
-      setState("account", existingAccount.label);
+      setState("account", args.account);
     } else {
       setState("account", accountConfig.default);
     }
   },
   subCommands: {
-    setup: setupCommand,
-    account: accountCommand,
+    setup: () => import("./commands/setup").then((m) => m.setupCommand),
+    account: () => import("./commands/accounts").then((m) => m.accountCommand),
     ...passThroughCommands,
   },
 });
 
-runMain(main);
+const ESC = String.fromCharCode(27); // 0x1B, built at runtime — not a static literal
+const cyanRe = new RegExp(`${ESC}\\[36m([\\s\\S]*?)${ESC}\\[39m`, "g");
+
+runMain(main, {
+  showUsage: async (cmd, parent) => {
+    try {
+      let usage = await renderUsage(cmd, parent);
+
+      usage = usage.replace(cyanRe, (_, text) => chalk.hex("#ff63a5")(text));
+      console.log(`${usage}\n`);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+});

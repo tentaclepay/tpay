@@ -10,7 +10,9 @@ export type AccountConfig<TKeystore extends Keystore = Keystore> = {
   default: AccountLabel;
   accounts: Record<
     AccountLabel,
-    Omit<Account<TKeystore>, "label" | "createdAt"> & { created_at: string }
+    Omit<Account<TKeystore>, "label" | "createdAt" | "isDefault"> & {
+      created_at: string;
+    }
   >;
 };
 
@@ -34,7 +36,8 @@ export const listAccounts = (
   >(([label, account]) => ({
     label,
     address: account.address,
-    auth: account.auth,
+    keystore: account.keystore,
+    isDefault: label === accountConfig.default,
     createdAt: new Date(account.created_at),
   }));
 
@@ -60,7 +63,8 @@ export const getAccount = <TKeystore extends Keystore>(
   return {
     label,
     address: account.address,
-    auth: account.auth,
+    keystore: account.keystore,
+    isDefault: label === accountConfig.default,
     createdAt: new Date(account.created_at),
   } as Account<TKeystore>;
 };
@@ -78,9 +82,11 @@ export const saveAccount = async <TKeystore extends Keystore>(
   accountConfig: AccountConfig,
   account: Account<TKeystore>
 ): Promise<void> => {
+  if (account.isDefault) accountConfig.default = account.label;
+
   accountConfig.accounts[account.label] = {
     address: account.address,
-    auth: account.auth,
+    keystore: account.keystore,
     created_at: account.createdAt.toISOString(),
   };
 

@@ -22,10 +22,8 @@ export const removeCommand = defineCommand({
           );
         case "unsupported_keystore":
           return console.error(`Unsupported keystore`);
-        case "biometrics_verification_failed":
-          return console.error(`Biometrics verification failed`);
-        case "keystore_function_fail":
-          return console.error(`Failed to remove wallet from keystore`);
+        case "verification_failed":
+          return console.error("Verification failed");
         default:
           return console.error("Unknown error occured");
       }

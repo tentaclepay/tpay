@@ -16,6 +16,10 @@ export const defaultCommand = defineCommand({
 
     if (!defaultResult.success) {
       switch (defaultResult.error) {
+        case "no_wallet":
+          return console.error(
+            `Tentacle Pay Wallet not initialized. Run "tpay setup"`
+          );
         case "wallet_not_exists":
           return console.error(
             `Wallet with label "${args.label}" are not exists`

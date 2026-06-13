@@ -17,16 +17,16 @@ export const exportCommand = defineCommand({
 
     if (!exportResult.success) {
       switch (exportResult.error) {
+        case "no_wallet":
+          return console.error(`No wallet found. Run "tpay setup"`);
         case "wallet_not_exists":
           return console.error(
             `Wallet with label "${args.label}" does not exist`
           );
         case "unsupported_keystore":
           return console.error(`Unsupported keystore`);
-        case "biometrics_verification_failed":
-          return console.error(`Biometrics verification failed`);
-        case "keystore_function_fail":
-          return console.error(`Failed to read wallet from keystore`);
+        case "verification_failed":
+          return console.error("Verification failed");
         default:
           return console.error("Unknown error occured");
       }

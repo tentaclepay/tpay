@@ -2,8 +2,7 @@ import chalk from "chalk";
 import { defineCommand } from "citty";
 
 import { importHandler } from "../../handlers/accounts/import";
-import { biometricsKeystores } from "../../types";
-import { getOsDefaultKeystore } from "../../utils/keystore";
+import { keystores } from "../../types";
 
 export const importCommand = defineCommand({
   meta: { name: "import", description: "Import account" },
@@ -13,39 +12,42 @@ export const importCommand = defineCommand({
       description: "Account label",
       required: true,
     },
-    secretKey: {
-      type: "positional",
+    "secret-key": {
+      type: "string",
       description: "Account secret key",
       required: true,
     },
     keystore: {
       type: "enum",
-      options: [...biometricsKeystores],
+      options: [...keystores],
+      default: "platform",
     },
   },
   run: async ({ args }) => {
-    const keystore = args.keystore ?? getOsDefaultKeystore();
-
     const importResult = await importHandler({
       label: args.label,
-      secretKey: args.secretKey,
-      keystore,
+      secretKey: args["secret-key"],
+      keystore: args.keystore,
     });
 
     if (!importResult.success) {
       switch (importResult.error) {
+        case "no_wallet":
+          return console.error(
+            `Wallet config hasn't been setup. Run "tpay setup"`
+          );
         case "wallet_already_exists":
           return console.error(
             `Wallet with label "${args.label}" already exists`
           );
-        case "invalid_secret_key":
-          return console.error(`Invalid secret key`);
         case "unsupported_keystore":
-          return console.error(`Unsupported keystore ${keystore}`);
-        case "biometrics_verification_failed":
-          return console.error(`Biometrics verification failed`);
-        case "keystore_function_fail":
-          return console.error(`Failed to store wallet to keystore`);
+          return console.error(`Unsupported keystore ${args.keystore}`);
+        case "verification_failed":
+          return console.error("Verification failed");
+        case "failed_to_store":
+          return console.error(
+            `Failed to import wallet to ${args.keystore} keystore`
+          );
         default:
           return console.error("Unknown error occured");
       }

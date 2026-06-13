@@ -4,7 +4,8 @@ import type { AccountConfig } from "../accounts";
 import type { Account, Handler, Keystore } from "../types";
 import type { Result } from "../utils/result";
 import { isAccountConfigExists, saveAccount } from "../accounts";
-import { saveKeystore as saveAppleKeychain } from "../lib/keystore/apple-keychain";
+import { saveKeystore } from "../lib/keystore";
+import { promptVerification } from "../lib/verification";
 import { fail, ok } from "../utils/result";
 
 type SetupHandlersInput = {
@@ -12,12 +13,14 @@ type SetupHandlersInput = {
   keystore: Keystore;
 };
 
-type SetupHandlerData = void;
+type SetupHandlerData = {
+  address: string;
+};
 type SetupHandlerError =
   | "tpay_ready"
   | "unsupported_keystore"
-  | "biometrics_verification_failed"
-  | "keystore_function_fail";
+  | "verification_failed"
+  | "failed_to_store";
 type SetupHandlerOutput = Promise<Result<SetupHandlerData, SetupHandlerError>>;
 
 export const setupHandler: Handler<
@@ -30,23 +33,15 @@ export const setupHandler: Handler<
     const keypair = Ed25519Keypair.generate();
 
     switch (keystore) {
-      case "apple-keychain": {
-        const saveResult = await saveAppleKeychain(
-          label,
-          keypair.getSecretKey(),
-          true
+      case "platform": {
+        const verified = await promptVerification(
+          keystore,
+          `store wallet "${label}"`
         );
-        if (!saveResult.success) {
-          switch (saveResult.error) {
-            case "biometrics_fail":
-              return fail("biometrics_verification_failed");
-            case "failed_to_store":
-              return fail("keystore_function_fail");
-            default:
-              return fail("unknown_error");
-          }
-        }
+        if (!verified) return fail("verification_failed");
 
+        const stored = await saveKeystore(label, keypair.getSecretKey());
+        if (!stored) return fail("failed_to_store");
         break;
       }
       default:
@@ -56,9 +51,8 @@ export const setupHandler: Handler<
     const account = {
       label,
       address: keypair.toSuiAddress(),
-      auth: {
-        keystore,
-      },
+      keystore,
+      isDefault: true,
       createdAt: new Date(),
     } satisfies Account<typeof keystore>;
 
@@ -70,7 +64,9 @@ export const setupHandler: Handler<
 
     await saveAccount(accountConfig, account);
 
-    return ok<void>();
+    return ok({
+      address: account.address,
+    });
   } catch (err) {
     return fail("unknown_error");
   }
