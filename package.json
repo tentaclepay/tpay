@@ -1,0 +1,28 @@
+{
+  "name": "@tentaclepay/tpay",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build:macos": "bun build --compile src/cli.ts --outfile ./bin/macos/tpay --target=bun-darwin-arm64",
+    "lint": "biome check",
+    "lint-staged": "biome check --write --staged --files-ignore-unknown=true --no-errors-on-unmatched"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "24"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@biomejs/biome": "2.4.15",
+    "@mysten/sui": "^2.17.0",
+    "@tentaclepay/sui-x402": "^2.1.12",
+    "chalk": "^5.6.2",
+    "citty": "^0.2.2",
+    "node-mac-auth": "^1.1.0"
+  },
+  "trustedDependencies": [
+    "node-mac-auth"
+  ]
+}
