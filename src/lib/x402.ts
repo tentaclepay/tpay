@@ -3,9 +3,11 @@ import { fromBase64 } from "@mysten/sui/utils";
 
 import type { ClientSuiSigner } from "@tentaclepay/sui-x402";
 
-export const createSuiSigner = (keypair: Ed25519Keypair) => {
+import type { Account } from "../types";
+
+export const createSuiSigner = (account: Account) => {
   const clientSuiSigner: ClientSuiSigner = {
-    address: keypair.toSuiAddress() as `0x${string}`,
+    address: account.address as `0x${string}`,
     signTransaction: async (bytes) => {
       const { signature } = await keypair.signTransaction(fromBase64(bytes));
 

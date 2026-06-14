@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { importHandler } from "../../handlers/accounts/import";
+import { saveAccount } from "../../handlers/accounts/save-account";
 import { keystores } from "../../types";
 
 export const importCommand = defineCommand({
@@ -22,20 +22,22 @@ export const importCommand = defineCommand({
       options: [...keystores],
       default: "platform",
     },
+    override: {
+      type: "boolean",
+      description: "Override existing wallet",
+      default: false,
+    },
   },
   run: async ({ args }) => {
-    const importResult = await importHandler({
+    const importResult = await saveAccount({
       label: args.label,
       secretKey: args["secret-key"],
       keystore: args.keystore,
+      override: args.override,
     });
 
     if (!importResult.success) {
       switch (importResult.error) {
-        case "no_wallet":
-          return console.error(
-            `Wallet config hasn't been setup. Run "tpay setup"`
-          );
         case "wallet_already_exists":
           return console.error(
             `Wallet with label "${args.label}" already exists`
@@ -43,7 +45,9 @@ export const importCommand = defineCommand({
         case "unsupported_keystore":
           return console.error(`Unsupported keystore ${args.keystore}`);
         case "verification_failed":
-          return console.error("Verification failed");
+          return console.error(
+            "Verification failed! Unable to import wallet to the keystore"
+          );
         case "failed_to_store":
           return console.error(
             `Failed to import wallet to ${args.keystore} keystore`

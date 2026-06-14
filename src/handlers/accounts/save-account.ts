@@ -3,53 +3,69 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import type { Account, Handler, Keystore } from "../../types";
 import type { Result } from "../../utils/result";
 import {
-  isAccountConfigExists,
   isAccountExist,
   loadAccountConfig,
-  saveAccount,
+  saveAccount as saveAccountToConfig,
 } from "../../accounts";
-import { saveKeystore } from "../../lib/keystore";
+import { saveKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type ImportHandlersInput = {
+type SaveAccountParams = {
   label: string;
-  secretKey: string;
   keystore: Keystore;
+  secretKey: string;
+  setAsDefault?: boolean;
+  override?: boolean;
 };
 
-type ImportHandlerData = {
+type SaveAccountData = {
   address: string;
+  createdAt: Date;
 };
-type ImportHandlerError =
-  | "no_wallet"
+type SaveAccountError =
   | "wallet_already_exists"
   | "unsupported_keystore"
   | "verification_failed"
   | "failed_to_store";
-type ImportHandlerOutput = Promise<
-  Result<ImportHandlerData, ImportHandlerError>
->;
+type SaveAccountResult = Promise<Result<SaveAccountData, SaveAccountError>>;
 
-export const importHandler: Handler<
-  ImportHandlersInput,
-  ImportHandlerOutput
-> = async ({ label, secretKey, keystore }) => {
+export const saveAccount: Handler<
+  SaveAccountParams,
+  SaveAccountResult
+> = async ({
+  label,
+  keystore,
+  secretKey,
+  setAsDefault = false,
+  override = false,
+}) => {
   try {
-    if (!(await isAccountConfigExists())) return fail("no_wallet");
-
     const accountConfig = await loadAccountConfig();
 
-    const existingAccount = isAccountExist(accountConfig, label);
-    if (existingAccount) return fail("wallet_already_exists");
+    if (!override) {
+      const existingAccount = isAccountExist(accountConfig, label);
+      if (existingAccount) return fail("wallet_already_exists");
+    }
 
     const keypair = Ed25519Keypair.fromSecretKey(secretKey);
+
+    const account = {
+      label,
+      address: keypair.toSuiAddress(),
+      keystore,
+      isDefault:
+        accountConfig.default === "" ||
+        Object.keys(accountConfig.accounts).length === 0 ||
+        setAsDefault,
+      createdAt: new Date(),
+    } satisfies Account<typeof keystore>;
 
     switch (keystore) {
       case "platform": {
         const verified = await promptVerification(
           keystore,
-          `store wallet "${label}"`
+          `save wallet "${label}"`
         );
         if (!verified) return fail("verification_failed");
 
@@ -61,18 +77,11 @@ export const importHandler: Handler<
         return fail("unsupported_keystore");
     }
 
-    const account = {
-      label,
-      address: keypair.toSuiAddress(),
-      keystore,
-      isDefault: false,
-      createdAt: new Date(),
-    } satisfies Account<typeof keystore>;
-
-    await saveAccount(accountConfig, account);
+    await saveAccountToConfig(accountConfig, account);
 
     return ok({
-      address: keypair.toSuiAddress(),
+      address: account.address,
+      createdAt: account.createdAt,
     });
   } catch (err) {
     return fail("unknown_error");

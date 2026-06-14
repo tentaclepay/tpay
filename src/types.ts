@@ -21,10 +21,17 @@ export const keystores = [
 ] as const;
 export type Keystore = (typeof keystores)[number];
 
-export type Account<TKeystore extends Keystore> = {
+export type Account<TKeystore extends Keystore = Keystore> = {
   label: string;
   address: string;
   keystore: TKeystore;
   isDefault: boolean;
   createdAt: Date;
+};
+
+export type CoinType = `0x${string}::${string}::${string}`;
+
+export type Balance = {
+  coinType: CoinType;
+  balance: string;
 };

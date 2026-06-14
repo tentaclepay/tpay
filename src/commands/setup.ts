@@ -1,15 +1,16 @@
 import { userInfo } from "node:os";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { setupHandler } from "../handlers/setup";
+import { saveAccount } from "../handlers/accounts/save-account";
 import { keystores } from "../types";
 
 export const setupCommand = defineCommand({
   meta: { name: "setup", description: "Setup Tentacle Pay Wallet" },
   args: {
     label: {
-      type: "positional",
+      type: "string",
       description: "Account label",
       required: false,
     },
@@ -22,15 +23,18 @@ export const setupCommand = defineCommand({
   run: async ({ args }) => {
     const label = args.label ?? userInfo().username.trim();
 
-    const setupResult = await setupHandler({
+    const keypair = Ed25519Keypair.generate();
+
+    const saveAccountResult = await saveAccount({
       label,
       keystore: args.keystore,
+      secretKey: keypair.getSecretKey(),
+      setAsDefault: true,
+      override: true,
     });
 
-    if (!setupResult.success) {
-      switch (setupResult.error) {
-        case "tpay_ready":
-          return console.error(`Tentacle Pay Wallet has been initialized`);
+    if (!saveAccountResult.success) {
+      switch (saveAccountResult.error) {
         case "unsupported_keystore":
           return console.error(`Unsupported keystore ${args.keystore}`);
         case "verification_failed":
@@ -44,7 +48,7 @@ export const setupCommand = defineCommand({
       }
     }
 
-    const { address } = setupResult.data;
+    const { address } = saveAccountResult.data;
 
     console.log(chalk.bold("Done! 🎉\n"));
     console.log("Wallet sucessfully created!");

@@ -1,54 +1,43 @@
 import type { Handler } from "../../types";
 import type { Result } from "../../utils/result";
-import {
-  getAccount,
-  isAccountConfigExists,
-  loadAccountConfig,
-} from "../../accounts";
-import { getKeystore } from "../../lib/keystore";
+import { getAccount, loadAccountConfig } from "../../accounts";
+import { getKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type ExportHandlersInput = {
+type ExportAccountParams = {
   label: string;
 };
 
-type ExportHandlerData = {
-  label: string;
+type ExportAccountData = {
   address: string;
   secretKey: string;
 };
-type ExportHandlerError =
-  | "no_wallet"
-  | "wallet_not_exists"
-  | "unsupported_keystore"
-  | "verification_failed";
-type ExportHandlerOutput = Promise<
-  Result<ExportHandlerData, ExportHandlerError>
+type ExportAccountError = "wallet_not_found" | "verification_failed";
+type ExportAccountOutput = Promise<
+  Result<ExportAccountData, ExportAccountError>
 >;
 
-export const exportHandler: Handler<
-  ExportHandlersInput,
-  ExportHandlerOutput
+export const exportAccount: Handler<
+  ExportAccountParams,
+  ExportAccountOutput
 > = async ({ label }) => {
   try {
-    if (!(await isAccountConfigExists())) return fail("no_wallet");
-
     const accountConfig = await loadAccountConfig();
 
     const account = getAccount(accountConfig, label);
-    if (!account) return fail("wallet_not_exists");
+    if (!account) return fail("wallet_not_found");
 
     switch (account.keystore) {
       case "platform": {
         const verified = await promptVerification(
           account.keystore,
-          `get wallet "${label}"`
+          `export wallet "${label}"`
         );
         if (!verified) return fail("verification_failed");
 
         const secretKey = await getKeystore(account.label);
-        if (!secretKey) return fail("wallet_not_exists");
+        if (!secretKey) return fail("wallet_not_found");
 
         return ok({
           label: account.label,
@@ -57,7 +46,7 @@ export const exportHandler: Handler<
         });
       }
       default:
-        return fail("unsupported_keystore");
+        return fail("wallet_not_found");
     }
   } catch (err) {
     return fail("unknown_error");

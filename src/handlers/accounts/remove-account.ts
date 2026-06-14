@@ -2,39 +2,32 @@ import type { Handler } from "../../types";
 import type { Result } from "../../utils/result";
 import {
   getAccount,
-  isAccountConfigExists,
   loadAccountConfig,
-  removeAccount,
+  removeAccount as removeAccountOnConfig,
 } from "../../accounts";
-import { deleteKeystore } from "../../lib/keystore";
+import { deleteKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type RemoveHandlersInput = {
+type RemoveAccountParams = {
   label: string;
 };
 
-type RemoveHandlerData = void;
-type RemoveHandlerError =
-  | "no_wallet"
-  | "wallet_not_exists"
-  | "unsupported_keystore"
-  | "verification_failed";
-type RemoveHandlerOutput = Promise<
-  Result<RemoveHandlerData, RemoveHandlerError>
+type RemoveAccountData = void;
+type RemoveAccountError = "wallet_not_found" | "verification_failed";
+type RemoveAccountResult = Promise<
+  Result<RemoveAccountData, RemoveAccountError>
 >;
 
-export const removeHandler: Handler<
-  RemoveHandlersInput,
-  RemoveHandlerOutput
+export const removeAccount: Handler<
+  RemoveAccountParams,
+  RemoveAccountResult
 > = async ({ label }) => {
   try {
-    if (!(await isAccountConfigExists())) return fail("no_wallet");
-
     const accountConfig = await loadAccountConfig();
 
     const account = getAccount(accountConfig, label);
-    if (!account) return fail("wallet_not_exists");
+    if (!account) return fail("wallet_not_found");
 
     switch (account.keystore) {
       case "platform": {
@@ -48,10 +41,10 @@ export const removeHandler: Handler<
         break;
       }
       default:
-        return fail("unsupported_keystore");
+      // Pass-through and remove immediately on config file
     }
 
-    await removeAccount(accountConfig, label);
+    await removeAccountOnConfig(accountConfig, label);
 
     return ok<void>();
   } catch (err) {

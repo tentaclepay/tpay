@@ -1,7 +1,12 @@
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { balanceHandler } from "../../handlers/accounts/balance";
+import type { CoinType } from "../../types";
+import {
+  MAINNET_COIN_TYPES_DECIMALS,
+  TESTNET_COIN_TYPES_DECIMALS,
+} from "../../constant";
+import { getBalances } from "../../handlers/accounts/get-balances";
 import { getState } from "../../state";
 
 export const balanceCommand = defineCommand({
@@ -17,42 +22,45 @@ export const balanceCommand = defineCommand({
     const network = getState("network");
 
     const label = args.label ?? getState("account");
-    if (!label) return console.error(`No wallet found. Run "tpay setup"`);
 
-    const balanceResult = await balanceHandler({
+    const coinTypes =
+      network === "mainnet"
+        ? MAINNET_COIN_TYPES_DECIMALS
+        : TESTNET_COIN_TYPES_DECIMALS;
+
+    const getBalanceResult = await getBalances({
       label,
       network,
+      coinTypes: Object.keys(coinTypes) as CoinType[],
     });
 
-    if (!balanceResult.success) {
-      switch (balanceResult.error) {
-        case "no_wallet":
-          return console.error(`No wallet found. Run "tpay setup"`);
-        case "wallet_not_exists":
+    if (!getBalanceResult.success) {
+      switch (getBalanceResult.error) {
+        case "wallet_not_found":
           return console.error(
-            `Wallet with label "${args.label}" was not exists`
+            `Wallet with label "${args.label}" was not found`
           );
         default:
           return console.error(`Unknown error occured`);
       }
     }
 
-    const balance = balanceResult.data;
+    const { account, balances } = getBalanceResult.data;
 
-    console.log(chalk.bold("Label:"), balance.label);
-    console.log(chalk.bold("Address:"), balance.address);
+    console.log(chalk.bold("Label:"), account.label);
+    console.log(chalk.bold("Address:"), account.address);
     console.log("===============");
-    console.log(
-      "~",
-      Number(balance.balances.sui) > 0 ? chalk.bold(balance.balances.sui) : "0",
-      "SUI"
-    );
-    console.log(
-      "~",
-      Number(balance.balances.usdc) > 0
-        ? chalk.bold(balance.balances.usdc)
-        : "0",
-      "USDC"
-    );
+    balances.forEach(({ coinType, balance }) => {
+      const balanceUnit = BigInt(balance);
+      const decimals = coinTypes[coinType as keyof typeof coinTypes];
+      const balanceDecimal = Number(balanceUnit) / 10 ** decimals;
+      const symbol = coinType.split("::").at(-1);
+
+      console.log(
+        "~",
+        balanceUnit > 0n ? chalk.bold(balanceDecimal) : "0",
+        symbol
+      );
+    });
   },
 });

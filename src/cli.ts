@@ -2,13 +2,14 @@ import chalk from "chalk";
 import { defineCommand, renderUsage, runMain } from "citty";
 
 import {
+  createAccountConfig,
   isAccountConfigExists,
   isAccountExist,
   loadAccountConfig,
+  validateAccountConfig,
 } from "./accounts";
-import { DEFAULT_NETWORK } from "./constant";
+import { APP_NAME, DEFAULT_NETWORK } from "./constant";
 import { setState } from "./state";
-import { initTpay } from "./utils/init";
 
 const passThroughCommands = {
   curl: () => import("./commands/curl").then((m) => m.curlCommand),
@@ -17,7 +18,7 @@ const passThroughCommands = {
 
 const main = defineCommand({
   meta: {
-    name: "tpay",
+    name: APP_NAME,
     version: "0.1.0",
     description: "Tentacle Pay Wallet",
   },
@@ -36,30 +37,43 @@ const main = defineCommand({
     },
   },
   setup: async ({ args }) => {
-    initTpay();
-
     setState("network", args.network);
 
-    if (!(await isAccountConfigExists())) return;
+    const accountConfigExists = await isAccountConfigExists();
+    if (!accountConfigExists) await createAccountConfig();
 
     const accountConfig = await loadAccountConfig();
+
+    const isValidAccountConfig = validateAccountConfig(accountConfig);
+
+    const [command, subCommand] = args._;
+
+    const hasBeenInitialized = command === "setup" && isValidAccountConfig;
+    if (hasBeenInitialized)
+      throw console.error("Tentacle Pay Wallet has been initialized");
+
+    const initializing =
+      (command === "setup" && !isValidAccountConfig) ||
+      (command === "account" && subCommand === "new");
+    if (initializing) return;
+
+    if (!isValidAccountConfig)
+      throw console.error("No wallet found. Run `tpay setup` first");
 
     if (args.account) {
       const existingAccount = isAccountExist(accountConfig, args.account);
       if (!existingAccount)
-        return console.error(
-          `Account with label "${args.account}" didn't exist`
-        );
+        return console.error(`Wallet with label "${args.account}" not found`);
 
-      setState("account", args.account);
-    } else {
-      setState("account", accountConfig.default);
+      return setState("account", args.account);
     }
+
+    return setState("account", accountConfig.default);
   },
   subCommands: {
     setup: () => import("./commands/setup").then((m) => m.setupCommand),
     account: () => import("./commands/accounts").then((m) => m.accountCommand),
-    ...passThroughCommands,
+    // ...passThroughCommands,
   },
 });
 

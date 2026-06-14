@@ -1,8 +1,8 @@
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { newHandler } from "../../handlers/accounts/new";
-import { setupHandler } from "../../handlers/setup";
+import { saveAccount } from "../../handlers/accounts/save-account";
 import { keystores } from "../../types";
 
 export const newCommand = defineCommand({
@@ -18,45 +18,24 @@ export const newCommand = defineCommand({
       options: [...keystores],
       default: "platform",
     },
+    override: {
+      type: "boolean",
+      description: "Override existing wallet",
+      default: false,
+    },
   },
   run: async ({ args }) => {
-    const newResult = await newHandler({
+    const keypair = Ed25519Keypair.generate();
+
+    const saveAccountResult = await saveAccount({
       label: args.label,
       keystore: args.keystore,
+      secretKey: keypair.getSecretKey(),
+      override: args.override,
     });
 
-    if (!newResult.success) {
-      switch (newResult.error) {
-        case "no_wallet": {
-          const setupResult = await setupHandler({
-            label: args.label,
-            keystore: args.keystore,
-          });
-
-          if (!setupResult.success) {
-            switch (setupResult.error) {
-              case "unsupported_keystore":
-                return console.error(`Unsupported keystore ${args.keystore}`);
-              case "verification_failed":
-                return console.error("Verification failed");
-              case "failed_to_store":
-                return console.error(
-                  `Failed to store wallet to ${args.keystore} keystore`
-                );
-              default:
-                return console.error("Unknown error occured");
-            }
-          }
-
-          const { address } = setupResult.data;
-
-          console.log("Wallet sucessfully created!");
-          console.log("===============");
-          console.log(chalk.bold("Label:"), args.label);
-          console.log(chalk.bold("Address:"), address);
-
-          return;
-        }
+    if (!saveAccountResult.success) {
+      switch (saveAccountResult.error) {
         case "wallet_already_exists":
           return console.error(
             `Wallet with label "${args.label}" already exists`
@@ -64,7 +43,9 @@ export const newCommand = defineCommand({
         case "unsupported_keystore":
           return console.error(`Unsupported keystore ${args.keystore}`);
         case "verification_failed":
-          return console.error("Verification failed");
+          return console.error(
+            "Verification failed! Unable to save wallet to the keystore"
+          );
         case "failed_to_store":
           return console.error(
             `Failed to store wallet to ${args.keystore} keystore`
@@ -74,7 +55,7 @@ export const newCommand = defineCommand({
       }
     }
 
-    const { address } = newResult.data;
+    const { address } = saveAccountResult.data;
 
     console.log("Wallet sucessfully created!");
     console.log("===============");

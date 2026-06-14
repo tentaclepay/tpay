@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 
-import { removeHandler } from "../../handlers/accounts/remove";
+import { removeAccount } from "../../handlers/accounts/remove-account";
 
 export const removeCommand = defineCommand({
   meta: { name: "remove", description: "Remove account", alias: "rm" },
@@ -12,18 +12,18 @@ export const removeCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
-    const removeResult = await removeHandler({ label: args.label });
+    const removeAccountResult = await removeAccount({ label: args.label });
 
-    if (!removeResult.success) {
-      switch (removeResult.error) {
-        case "wallet_not_exists":
+    if (!removeAccountResult.success) {
+      switch (removeAccountResult.error) {
+        case "wallet_not_found":
           return console.error(
-            `Wallet with label "${args.label}" does not exist`
+            `Wallet with label "${args.label}" was not found`
           );
-        case "unsupported_keystore":
-          return console.error(`Unsupported keystore`);
         case "verification_failed":
-          return console.error("Verification failed");
+          return console.error(
+            "Verification failed! Unable to remove wallet from the keystore"
+          );
         default:
           return console.error("Unknown error occured");
       }

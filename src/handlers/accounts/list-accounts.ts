@@ -1,26 +1,23 @@
 import type { Account, Handler, Keystore } from "../../types";
 import type { Result } from "../../utils/result";
 import {
-  isAccountConfigExists,
-  listAccounts,
+  listAccounts as listAccountFromConfig,
   loadAccountConfig,
 } from "../../accounts";
 import { fail, ok } from "../../utils/result";
 
-type ListHandlersInput = undefined;
-type ListHandlerData = Account<Keystore>[];
-type ListHandlerOutput = Promise<Result<ListHandlerData>>;
+type ListAccountsParams = undefined;
+type ListAccountsData = Account<Keystore>[];
+type ListAccountsResult = Promise<Result<ListAccountsData>>;
 
-export const listHandler: Handler<
-  ListHandlersInput,
-  ListHandlerOutput
+export const listAccounts: Handler<
+  ListAccountsParams,
+  ListAccountsResult
 > = async () => {
   try {
-    if (!(await isAccountConfigExists())) return ok([]);
-
     const accountConfig = await loadAccountConfig();
 
-    const accounts = listAccounts(accountConfig);
+    const accounts = listAccountFromConfig(accountConfig);
 
     return ok(accounts);
   } catch (err) {

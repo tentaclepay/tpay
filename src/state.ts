@@ -1,14 +1,12 @@
+import type { AccountLabel } from "./accounts";
 import type { Network } from "./types";
 
 export type State = {
   network: Network;
-  account: string | null;
+  account: AccountLabel;
 };
 
-const state: State = {
-  network: "mainnet",
-  account: null,
-};
+const state = {} as State;
 
 export const setState = <TKey extends keyof State>(
   key: TKey,

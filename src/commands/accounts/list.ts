@@ -1,12 +1,12 @@
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { listHandler } from "../../handlers/accounts/list";
+import { listAccounts } from "../../handlers/accounts/list-accounts";
 
 export const listCommand = defineCommand({
   meta: { name: "list", description: "Account list", alias: "ls" },
   run: async () => {
-    const listResult = await listHandler();
+    const listResult = await listAccounts();
 
     if (!listResult.success) {
       switch (listResult.error) {

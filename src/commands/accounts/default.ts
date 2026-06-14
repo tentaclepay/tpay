@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 
-import { defaultHandler } from "../../handlers/accounts/default";
+import { setDefault } from "../../handlers/accounts/set-default";
 
 export const defaultCommand = defineCommand({
   meta: { name: "default", description: "Set default account" },
@@ -12,17 +12,13 @@ export const defaultCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
-    const defaultResult = await defaultHandler({ label: args.label });
+    const setDefaultResult = await setDefault({ label: args.label });
 
-    if (!defaultResult.success) {
-      switch (defaultResult.error) {
-        case "no_wallet":
+    if (!setDefaultResult.success) {
+      switch (setDefaultResult.error) {
+        case "wallet_not_found":
           return console.error(
-            `Tentacle Pay Wallet not initialized. Run "tpay setup"`
-          );
-        case "wallet_not_exists":
-          return console.error(
-            `Wallet with label "${args.label}" are not exists`
+            `Wallet with label "${args.label}" was not found`
           );
         default:
           return console.error(`Unknown error occured`);

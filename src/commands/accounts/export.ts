@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { defineCommand } from "citty";
 
-import { exportHandler } from "../../handlers/accounts/export";
+import { exportAccount } from "../../handlers/accounts/export-account";
 
 export const exportCommand = defineCommand({
   meta: { name: "export", description: "Export account" },
@@ -13,26 +13,24 @@ export const exportCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
-    const exportResult = await exportHandler({ label: args.label });
+    const exportAccountResult = await exportAccount({ label: args.label });
 
-    if (!exportResult.success) {
-      switch (exportResult.error) {
-        case "no_wallet":
-          return console.error(`No wallet found. Run "tpay setup"`);
-        case "wallet_not_exists":
+    if (!exportAccountResult.success) {
+      switch (exportAccountResult.error) {
+        case "wallet_not_found":
           return console.error(
-            `Wallet with label "${args.label}" does not exist`
+            `Wallet with label "${args.label}" was not found`
           );
-        case "unsupported_keystore":
-          return console.error(`Unsupported keystore`);
         case "verification_failed":
-          return console.error("Verification failed");
+          return console.error(
+            "Verification failed! Unable to export wallet from the keystore"
+          );
         default:
           return console.error("Unknown error occured");
       }
     }
 
-    const { address, secretKey } = exportResult.data;
+    const { address, secretKey } = exportAccountResult.data;
 
     console.log("Wallet secret key exported!");
     console.log("===============");

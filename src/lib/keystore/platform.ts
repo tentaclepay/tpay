@@ -1,6 +1,6 @@
 import { secrets } from "bun";
 
-import { TPAY_NAME } from "../constant";
+import { APP_NAME } from "../../constant";
 
 export const saveKeystore = async (
   label: string,
@@ -8,7 +8,7 @@ export const saveKeystore = async (
 ): Promise<boolean> => {
   const stored = await secrets
     .set({
-      service: TPAY_NAME,
+      service: APP_NAME,
       name: label,
       value,
     })
@@ -21,7 +21,7 @@ export const saveKeystore = async (
 export const getKeystore = async (label: string): Promise<string | null> => {
   const secretKey = await secrets
     .get({
-      service: TPAY_NAME,
+      service: APP_NAME,
       name: label,
     })
     .catch(() => null);
@@ -32,7 +32,7 @@ export const getKeystore = async (label: string): Promise<string | null> => {
 export const deleteKeystore = async (label: string): Promise<boolean> => {
   const deleted = await secrets
     .delete({
-      service: TPAY_NAME,
+      service: APP_NAME,
       name: label,
     })
     .catch(() => false);
