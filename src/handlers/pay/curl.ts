@@ -14,7 +14,7 @@ import {
   parseHeaders,
 } from "../../lib/curl";
 import { getKeystore } from "../../lib/keystore/platform";
-import { promptVerification } from "../../lib/verification";
+import { promptVerification, verificationReason } from "../../lib/verification";
 import { createSuiSigner } from "../../lib/x402";
 import { fail, ok } from "../../utils/result";
 
@@ -61,7 +61,7 @@ export const payWithCurl: Handler<
     const suiSigner = createSuiSigner(account, async (account) => {
       const verified = await promptVerification(
         account.keystore,
-        `pay with "${label}" wallet`
+        verificationReason.pay(label)
       );
       if (!verified) {
         lastError = "verification_failed";

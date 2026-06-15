@@ -2,7 +2,7 @@ import type { Handler } from "../../types";
 import type { Result } from "../../utils/result";
 import { getAccount, loadAccountConfig } from "../../accounts";
 import { getKeystore } from "../../lib/keystore/platform";
-import { promptVerification } from "../../lib/verification";
+import { promptVerification, verificationReason } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
 export type ExportAccountParams = {
@@ -31,7 +31,7 @@ export const exportAccount: Handler<
       case "platform": {
         const verified = await promptVerification(
           account.keystore,
-          `export wallet "${label}"`
+          verificationReason.export(label)
         );
         if (!verified) return fail("verification_failed");
 

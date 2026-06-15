@@ -6,7 +6,7 @@ import {
   removeAccount as removeAccountOnConfig,
 } from "../../accounts";
 import { deleteKeystore } from "../../lib/keystore/platform";
-import { promptVerification } from "../../lib/verification";
+import { promptVerification, verificationReason } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
 export type RemoveAccountParams = {
@@ -32,7 +32,7 @@ export const removeAccount: Handler<
       case "platform": {
         const verified = await promptVerification(
           account.keystore,
-          `remove wallet "${label}"`
+          verificationReason.remove(label)
         );
         if (!verified) return fail("verification_failed");
 

@@ -8,7 +8,7 @@ import {
   saveAccount as saveAccountToConfig,
 } from "../../accounts";
 import { saveKeystore } from "../../lib/keystore/platform";
-import { promptVerification } from "../../lib/verification";
+import { promptVerification, verificationReason } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
 export type SaveAccountParams = {
@@ -66,7 +66,7 @@ export const saveAccount: Handler<
       case "platform": {
         const verified = await promptVerification(
           keystore,
-          `save wallet "${label}"`
+          verificationReason.save(label)
         );
         if (!verified) return fail("verification_failed");
 
