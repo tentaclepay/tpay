@@ -1,9 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { SchemeNetworkClient } from "@x402/core/types";
 import { SUI_DECIMALS } from "@mysten/sui/utils";
-
-import { ExactSuiScheme } from "@tentaclepay/sui-x402";
 
 export const APP_NAME = "tpay";
 

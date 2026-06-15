@@ -3,7 +3,7 @@ import { x402Client as X402Client, x402HTTPClient } from "@x402/core/client";
 
 import { ExactSuiScheme } from "@tentaclepay/sui-x402";
 
-import type { Handler, Network } from "../../types";
+import type { Handler } from "../../types";
 import type { Result, UnknownError } from "../../utils/result";
 import { getAccount, loadAccountConfig } from "../../accounts";
 import { MAINNET_CAIP2_NETWORKS, TESTNET_CAIP2_NETWORKS } from "../../constant";
@@ -26,7 +26,7 @@ export type PayWithCurlData = void;
 export type PayWithCurlError =
   | "wallet_not_found"
   | "x402_payment_attempted"
-  | "faled_to_build_transaction"
+  | "failed_to_build_transaction"
   | "verification_failed";
 export type PayWIthCurlResult = Promise<
   Result<PayWithCurlData, PayWithCurlError>
@@ -122,7 +122,7 @@ export const payWithCurl: Handler<
         await x402HttpClient.createPaymentPayload(paymentRequired);
     } catch (err) {
       if (err instanceof Error) {
-        lastError = "faled_to_build_transaction";
+        lastError = "failed_to_build_transaction";
         lastErrorMessage = err.message;
         throw lastError;
       }
@@ -136,7 +136,7 @@ export const payWithCurl: Handler<
         x402HttpClient.encodePaymentSignatureHeader(paymentPayload);
     } catch (err) {
       if (err instanceof Error) {
-        lastError = "faled_to_build_transaction";
+        lastError = "failed_to_build_transaction";
         lastErrorMessage = err.message;
         throw lastError;
       }

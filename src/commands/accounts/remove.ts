@@ -1,13 +1,14 @@
 import { defineCommand } from "citty";
 
 import { removeAccount } from "../../handlers/accounts/remove-account";
+import * as ui from "../../lib/ui";
 
 export const removeCommand = defineCommand({
-  meta: { name: "remove", description: "Remove account", alias: "rm" },
+  meta: { name: "remove", description: "Delete a wallet", alias: "rm" },
   args: {
     label: {
       type: "positional",
-      description: "Account label",
+      description: "Wallet to remove",
       required: true,
     },
   },
@@ -17,18 +18,20 @@ export const removeCommand = defineCommand({
     if (!removeAccountResult.success) {
       switch (removeAccountResult.error) {
         case "wallet_not_found":
-          return console.error(
-            `Wallet with label "${args.label}" was not found`
+          return ui.error(
+            `Wallet "${args.label}" was not found.`,
+            "Run `tpay account list` to see your wallets."
           );
         case "verification_failed":
-          return console.error(
-            "Verification failed! Unable to remove wallet from the keystore"
+          return ui.error(
+            "Identity verification failed.",
+            "Couldn't remove the wallet — authentication was cancelled."
           );
         default:
-          return console.error("Unknown error occured");
+          return ui.error("Couldn't remove the wallet.", "Please try again.");
       }
     }
 
-    console.log(`Account with label "${args.label}" was removed!`);
+    ui.success(`Removed wallet "${args.label}".`);
   },
 });

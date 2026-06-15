@@ -2,30 +2,48 @@ import chalk from "chalk";
 import { defineCommand } from "citty";
 
 import { listAccounts } from "../../handlers/accounts/list-accounts";
+import * as ui from "../../lib/ui";
 
 export const listCommand = defineCommand({
-  meta: { name: "list", description: "Account list", alias: "ls" },
+  meta: { name: "list", description: "List all wallets", alias: "ls" },
   run: async () => {
     const listResult = await listAccounts();
 
     if (!listResult.success) {
-      switch (listResult.error) {
-        default:
-          return console.error(`Unknown error occured`);
-      }
+      return ui.error(
+        "Couldn't read your wallets.",
+        "Your config may be missing — run `tpay setup` to create a wallet."
+      );
     }
 
     const accounts = listResult.data;
 
-    console.log("Total Wallet:", chalk.bold(accounts.length));
-    accounts.forEach((account) => {
-      console.log("===============");
+    if (accounts.length === 0) {
+      ui.info("No wallets yet.");
+      ui.newline();
       console.log(
-        chalk.bold("Label:"),
-        account.label,
-        account.isDefault ? chalk.magenta.italic("(active)") : ""
+        chalk.dim(
+          "  Create one with `tpay setup` or `tpay account new <label>`."
+        )
       );
-      console.log(chalk.bold("Address:"), account.address);
+      return;
+    }
+
+    console.log(
+      chalk.bold(`${accounts.length} wallet${accounts.length === 1 ? "" : "s"}`)
+    );
+
+    accounts.forEach((account) => {
+      ui.newline();
+      ui.details([
+        [
+          "Label",
+          account.isDefault
+            ? `${account.label} ${ui.brand("(active)")}`
+            : account.label,
+        ],
+        ["Address", account.address],
+      ]);
     });
   },
 });

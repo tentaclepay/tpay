@@ -1,30 +1,32 @@
-import chalk from "chalk";
 import { defineCommand } from "citty";
 
 import { saveAccount } from "../../handlers/accounts/save-account";
+import * as ui from "../../lib/ui";
 import { keystores } from "../../types";
 
 export const importCommand = defineCommand({
-  meta: { name: "import", description: "Import account" },
+  meta: { name: "import", description: "Import a wallet from a secret key" },
   args: {
     label: {
       type: "positional",
-      description: "Account label",
+      description: "Name for the imported wallet",
       required: true,
     },
     "secret-key": {
       type: "string",
-      description: "Account secret key",
+      description: "Secret key to import (e.g. suiprivkey…)",
       required: true,
     },
     keystore: {
       type: "enum",
       options: [...keystores],
       default: "platform",
+      description:
+        "Where to store the secret key (platform = your OS keychain)",
     },
     override: {
       type: "boolean",
-      description: "Override existing wallet",
+      description: "Replace an existing wallet with the same name",
       default: false,
     },
   },
@@ -39,29 +41,40 @@ export const importCommand = defineCommand({
     if (!importResult.success) {
       switch (importResult.error) {
         case "wallet_already_exists":
-          return console.error(
-            `Wallet with label "${args.label}" already exists`
+          return ui.error(
+            `Wallet "${args.label}" already exists.`,
+            "Pass --override to replace it, or choose another name."
           );
         case "unsupported_keystore":
-          return console.error(`Unsupported keystore ${args.keystore}`);
+          return ui.error(
+            `Keystore "${args.keystore}" isn't supported.`,
+            "Supported keystore: platform."
+          );
         case "verification_failed":
-          return console.error(
-            "Verification failed! Unable to import wallet to the keystore"
+          return ui.error(
+            "Identity verification failed.",
+            "Couldn't import the wallet — authentication was cancelled."
           );
         case "failed_to_store":
-          return console.error(
-            `Failed to import wallet to ${args.keystore} keystore`
+          return ui.error(
+            `Couldn't save the wallet to the ${args.keystore} keystore.`,
+            "Make sure tpay can access your OS keychain, then retry."
           );
         default:
-          return console.error("Unknown error occured");
+          return ui.error(
+            "Something went wrong while importing the wallet.",
+            "Double-check the secret key, then try again."
+          );
       }
     }
 
     const { address } = importResult.data;
 
-    console.log("Wallet sucessfully imported!");
-    console.log("===============");
-    console.log(chalk.bold("Label:"), args.label);
-    console.log(chalk.bold("Address:"), address);
+    ui.success(`Imported wallet "${args.label}".`);
+    ui.newline();
+    ui.details([
+      ["Label", args.label],
+      ["Address", address],
+    ]);
   },
 });

@@ -1,4 +1,3 @@
-import chalk from "chalk";
 import { defineCommand, renderUsage, runMain } from "citty";
 
 import {
@@ -8,7 +7,8 @@ import {
   loadAccountConfig,
   validateAccountConfig,
 } from "./accounts";
-import { APP_NAME, DEFAULT_NETWORK } from "./constant";
+import { APP_NAME } from "./constant";
+import * as ui from "./lib/ui";
 import { setState } from "./state";
 
 const passThroughCommands = {
@@ -19,13 +19,14 @@ const main = defineCommand({
   meta: {
     name: APP_NAME,
     version: "0.1.0",
-    description: "Tentacle Pay Wallet",
+    description: "Tentacle Pay Wallet — let your agents pay for APIs on Sui.",
   },
   args: {
     account: {
       type: "string",
       alias: "a",
-      description: "Select account to use for",
+      description:
+        "Wallet to use for this command (defaults to the active wallet)",
     },
   },
   setup: async ({ args }) => {
@@ -40,7 +41,10 @@ const main = defineCommand({
 
     const hasBeenInitialized = command === "setup" && isValidAccountConfig;
     if (hasBeenInitialized)
-      throw console.error("Tentacle Pay Wallet has been initialized");
+      ui.fatal(
+        "tpay is already set up.",
+        "Add another wallet with `tpay account new <label>`."
+      );
 
     const initializing =
       (command === "setup" && !isValidAccountConfig) ||
@@ -48,12 +52,18 @@ const main = defineCommand({
     if (initializing) return;
 
     if (!isValidAccountConfig)
-      throw console.error("No wallet found. Run `tpay setup` first");
+      ui.fatal(
+        "No wallet found.",
+        "Run `tpay setup` to create your first wallet."
+      );
 
     if (args.account) {
       const existingAccount = isAccountExist(accountConfig, args.account);
       if (!existingAccount)
-        return console.error(`Wallet with label "${args.account}" not found`);
+        ui.fatal(
+          `Wallet "${args.account}" was not found.`,
+          "Run `tpay account list` to see your wallets."
+        );
 
       return setState("account", args.account);
     }
@@ -75,7 +85,7 @@ runMain(main, {
     try {
       let usage = await renderUsage(cmd, parent);
 
-      usage = usage.replace(cyanRe, (_, text) => chalk.hex("#ff63a5")(text));
+      usage = usage.replace(cyanRe, (_, text) => ui.brand(text));
       console.log(`${usage}\n`);
     } catch (error) {
       console.error(error);

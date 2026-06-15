@@ -1,23 +1,28 @@
 import { userInfo } from "node:os";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import chalk from "chalk";
 import { defineCommand } from "citty";
 
 import { saveAccount } from "../handlers/accounts/save-account";
+import * as ui from "../lib/ui";
 import { keystores } from "../types";
 
 export const setupCommand = defineCommand({
-  meta: { name: "setup", description: "Setup Tentacle Pay Wallet" },
+  meta: {
+    name: "setup",
+    description: "Create your first wallet and initialize tpay",
+  },
   args: {
     label: {
       type: "string",
-      description: "Account label",
+      description: "Name for the wallet (defaults to your system username)",
       required: false,
     },
     keystore: {
       type: "enum",
       options: [...keystores],
       default: "platform",
+      description:
+        "Where to store the secret key (platform = your OS keychain)",
     },
   },
   run: async ({ args }) => {
@@ -36,24 +41,37 @@ export const setupCommand = defineCommand({
     if (!saveAccountResult.success) {
       switch (saveAccountResult.error) {
         case "unsupported_keystore":
-          return console.error(`Unsupported keystore ${args.keystore}`);
+          return ui.error(
+            `Keystore "${args.keystore}" isn't supported.`,
+            "Supported keystore: platform."
+          );
         case "verification_failed":
-          return console.error("Verification failed");
+          return ui.error(
+            "Identity verification failed.",
+            "Authentication was cancelled or timed out — try again."
+          );
         case "failed_to_store":
-          return console.error(
-            `Failed to store wallet to ${args.keystore} keystore`
+          return ui.error(
+            `Couldn't save the wallet to the ${args.keystore} keystore.`,
+            "Make sure tpay can access your OS keychain, then retry."
           );
         default:
-          return console.error("Unknown error occured");
+          return ui.error(
+            "Something went wrong while creating your wallet.",
+            "Please try again."
+          );
       }
     }
 
     const { address } = saveAccountResult.data;
 
-    console.log(chalk.bold("Done! 🎉\n"));
-    console.log("Wallet sucessfully created!");
-    console.log("===============");
-    console.log(chalk.bold("Label:"), label);
-    console.log(chalk.bold("Address:"), address);
+    ui.success("Wallet created 🎉");
+    ui.newline();
+    ui.details([
+      ["Label", label],
+      ["Address", address],
+    ]);
+    ui.newline();
+    ui.info("Fund this address with USDC to start paying for APIs.");
   },
 });

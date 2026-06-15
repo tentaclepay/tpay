@@ -1,14 +1,14 @@
-import chalk from "chalk";
 import { defineCommand } from "citty";
 
 import { exportAccount } from "../../handlers/accounts/export-account";
+import * as ui from "../../lib/ui";
 
 export const exportCommand = defineCommand({
-  meta: { name: "export", description: "Export account" },
+  meta: { name: "export", description: "Reveal a wallet's secret key" },
   args: {
     label: {
       type: "positional",
-      description: "Account label",
+      description: "Wallet to export",
       required: true,
     },
   },
@@ -18,24 +18,28 @@ export const exportCommand = defineCommand({
     if (!exportAccountResult.success) {
       switch (exportAccountResult.error) {
         case "wallet_not_found":
-          return console.error(
-            `Wallet with label "${args.label}" was not found`
+          return ui.error(
+            `Wallet "${args.label}" was not found.`,
+            "Run `tpay account list` to see your wallets."
           );
         case "verification_failed":
-          return console.error(
-            "Verification failed! Unable to export wallet from the keystore"
+          return ui.error(
+            "Identity verification failed.",
+            "Couldn't reveal the secret key — authentication was cancelled."
           );
         default:
-          return console.error("Unknown error occured");
+          return ui.error("Couldn't export the wallet.", "Please try again.");
       }
     }
 
     const { address, secretKey } = exportAccountResult.data;
 
-    console.log("Wallet secret key exported!");
-    console.log("===============");
-    console.log(chalk.bold("Label:"), args.label);
-    console.log(chalk.bold("Address:"), address);
-    console.log(chalk.bold("Secret Key:"), secretKey);
+    ui.warn("Your secret key controls this wallet. Never share it.");
+    ui.newline();
+    ui.details([
+      ["Label", args.label],
+      ["Address", address],
+      ["Secret Key", secretKey],
+    ]);
   },
 });
