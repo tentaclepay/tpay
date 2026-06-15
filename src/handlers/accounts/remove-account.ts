@@ -9,13 +9,12 @@ import { deleteKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type RemoveAccountParams = {
+export type RemoveAccountParams = {
   label: string;
 };
-
-type RemoveAccountData = void;
-type RemoveAccountError = "wallet_not_found" | "verification_failed";
-type RemoveAccountResult = Promise<
+export type RemoveAccountData = void;
+export type RemoveAccountError = "wallet_not_found" | "verification_failed";
+export type RemoveAccountResult = Promise<
   Result<RemoveAccountData, RemoveAccountError>
 >;
 

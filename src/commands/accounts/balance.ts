@@ -3,6 +3,7 @@ import { defineCommand } from "citty";
 
 import type { CoinType } from "../../types";
 import {
+  DEFAULT_NETWORK,
   MAINNET_COIN_TYPES_DECIMALS,
   TESTNET_COIN_TYPES_DECIMALS,
 } from "../../constant";
@@ -17,9 +18,16 @@ export const balanceCommand = defineCommand({
       description: "Account label",
       required: false,
     },
+    network: {
+      type: "enum",
+      options: ["mainnet", "testnet"],
+      default: DEFAULT_NETWORK,
+      alias: "n",
+      description: "Set network",
+    },
   },
   run: async ({ args }) => {
-    const network = getState("network");
+    const network = args.network;
 
     const label = args.label ?? getState("account");
 

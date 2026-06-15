@@ -11,24 +11,25 @@ import { saveKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type SaveAccountParams = {
+export type SaveAccountParams = {
   label: string;
   keystore: Keystore;
   secretKey: string;
   setAsDefault?: boolean;
   override?: boolean;
 };
-
-type SaveAccountData = {
+export type SaveAccountData = {
   address: string;
   createdAt: Date;
 };
-type SaveAccountError =
+export type SaveAccountError =
   | "wallet_already_exists"
   | "unsupported_keystore"
   | "verification_failed"
   | "failed_to_store";
-type SaveAccountResult = Promise<Result<SaveAccountData, SaveAccountError>>;
+export type SaveAccountResult = Promise<
+  Result<SaveAccountData, SaveAccountError>
+>;
 
 export const saveAccount: Handler<
   SaveAccountParams,

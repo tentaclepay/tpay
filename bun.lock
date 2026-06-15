@@ -12,6 +12,7 @@
         "chalk": "^5.6.2",
         "citty": "^0.2.2",
         "node-mac-auth": "^1.1.0",
+        "parse-headers": "^2.0.6",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -101,6 +102,8 @@
     "node-addon-api": ["node-addon-api@7.1.1", "", {}, "sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ=="],
 
     "node-mac-auth": ["node-mac-auth@1.1.0", "", { "dependencies": { "bindings": "^1.5.0", "node-addon-api": "^7.1.0" }, "os": "darwin" }, "sha512-6cAAizoJBzXgq6ACUo2R8QSUm5NW1Lz0dQk7rpe+BQCsGswqlpJBnCuweS2WewLlNv1hIi+KqNsCltwU8Gm6UA=="],
+
+    "parse-headers": ["parse-headers@2.0.6", "", {}, "sha512-Tz11t3uKztEW5FEVZnj1ox8GKblWn+PvHY9TmJV5Mll2uHEwRdR/5Li1OlXoECjLYkApdhWy44ocONwXLiKO5A=="],
 
     "poseidon-lite": ["poseidon-lite@0.2.1", "", {}, "sha512-xIr+G6HeYfOhCuswdqcFpSX47SPhm0EpisWJ6h7fHlWwaVIvH3dLnejpatrtw6Xc6HaLrpq05y7VRfvDmDGIog=="],
 

@@ -26,7 +26,7 @@ export const defaultCommand = defineCommand({
     }
 
     return console.log(
-      `Account with label "${args.label}" was set as default!`
+      `Account with label "${args.label}" has been set as default!`
     );
   },
 });

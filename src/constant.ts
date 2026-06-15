@@ -1,6 +1,9 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+import type { SchemeNetworkClient } from "@x402/core/types";
 import { SUI_DECIMALS } from "@mysten/sui/utils";
+
+import { ExactSuiScheme } from "@tentaclepay/sui-x402";
 
 export const APP_NAME = "tpay";
 
@@ -47,3 +50,6 @@ export const TESTNET_COIN_TYPES_DECIMALS = {
   [SUI_COIN_TYPE]: SUI_DECIMALS,
   [USDC_TESTNET_COIN_TYPE]: USDC_DECIMALS,
 } as const;
+
+export const MAINNET_CAIP2_NETWORKS = ["sui:mainnet"] as const;
+export const TESTNET_CAIP2_NETWORKS = ["sui:testnet"] as const;

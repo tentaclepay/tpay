@@ -6,13 +6,12 @@ import {
 } from "../../accounts";
 import { fail, ok } from "../../utils/result";
 
-type GetAccountParams = {
+export type GetAccountParams = {
   label: string;
 };
-
-type GetAccountData = Account<Keystore>;
-type GetAccountError = "wallet_not_found";
-type GetAccountResult = Promise<Result<GetAccountData, GetAccountError>>;
+export type GetAccountData = Account<Keystore>;
+export type GetAccountError = "wallet_not_found";
+export type GetAccountResult = Promise<Result<GetAccountData, GetAccountError>>;
 
 export const getAccount: Handler<GetAccountParams, GetAccountResult> = async ({
   label,

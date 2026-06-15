@@ -13,7 +13,6 @@ import { setState } from "./state";
 
 const passThroughCommands = {
   curl: () => import("./commands/curl").then((m) => m.curlCommand),
-  wget: () => import("./commands/wget").then((m) => m.wgetCommand),
 };
 
 const main = defineCommand({
@@ -23,13 +22,6 @@ const main = defineCommand({
     description: "Tentacle Pay Wallet",
   },
   args: {
-    network: {
-      type: "enum",
-      options: ["mainnet", "testnet"],
-      default: DEFAULT_NETWORK,
-      alias: "n",
-      description: "Set network",
-    },
     account: {
       type: "string",
       alias: "a",
@@ -37,8 +29,6 @@ const main = defineCommand({
     },
   },
   setup: async ({ args }) => {
-    setState("network", args.network);
-
     const accountConfigExists = await isAccountConfigExists();
     if (!accountConfigExists) await createAccountConfig();
 
@@ -73,7 +63,7 @@ const main = defineCommand({
   subCommands: {
     setup: () => import("./commands/setup").then((m) => m.setupCommand),
     account: () => import("./commands/accounts").then((m) => m.accountCommand),
-    // ...passThroughCommands,
+    ...passThroughCommands,
   },
 });
 

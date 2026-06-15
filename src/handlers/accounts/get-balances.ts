@@ -14,18 +14,19 @@ import {
 import { getNetworkClient } from "../../lib/network";
 import { fail, ok } from "../../utils/result";
 
-type GetBalancesParams = {
+export type GetBalancesParams = {
   label: string;
   coinTypes: CoinType[];
   network: Network;
 };
-
-type GetBalancesData = {
+export type GetBalancesData = {
   account: Account<Keystore>;
   balances: Balance[];
 };
-type GetBalancesError = "wallet_not_found";
-type GetBalancesResult = Promise<Result<GetBalancesData, GetBalancesError>>;
+export type GetBalancesError = "wallet_not_found";
+export type GetBalancesResult = Promise<
+  Result<GetBalancesData, GetBalancesError>
+>;
 
 export const getBalances: Handler<
   GetBalancesParams,

@@ -1,8 +1,6 @@
 import type { AccountLabel } from "./accounts";
-import type { Network } from "./types";
 
 export type State = {
-  network: Network;
   account: AccountLabel;
 };
 

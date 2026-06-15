@@ -5,16 +5,15 @@ import { getKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type ExportAccountParams = {
+export type ExportAccountParams = {
   label: string;
 };
-
-type ExportAccountData = {
+export type ExportAccountData = {
   address: string;
   secretKey: string;
 };
-type ExportAccountError = "wallet_not_found" | "verification_failed";
-type ExportAccountOutput = Promise<
+export type ExportAccountError = "wallet_not_found" | "verification_failed";
+export type ExportAccountOutput = Promise<
   Result<ExportAccountData, ExportAccountError>
 >;
 

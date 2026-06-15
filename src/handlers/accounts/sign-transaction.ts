@@ -8,16 +8,15 @@ import { getKeystore } from "../../lib/keystore/platform";
 import { promptVerification } from "../../lib/verification";
 import { fail, ok } from "../../utils/result";
 
-type SignTransactionParams = {
+export type SignTransactionParams = {
   label: string;
   transaction: string;
 };
-
-type SignTransactionData = {
+export type SignTransactionData = {
   signature: string;
 };
-type SignTransactionError = "wallet_not_found" | "verification_failed";
-type SignTransactionOutput = Promise<
+export type SignTransactionError = "wallet_not_found" | "verification_failed";
+export type SignTransactionOutput = Promise<
   Result<SignTransactionData, SignTransactionError>
 >;
 

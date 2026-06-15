@@ -7,13 +7,12 @@ import {
 } from "../../accounts";
 import { fail, ok } from "../../utils/result";
 
-type SetDefaultParams = {
+export type SetDefaultParams = {
   label: string;
 };
-
-type SetDefaultData = void;
-type SetDefaultError = "wallet_not_found";
-type SetDefaultResult = Promise<Result<SetDefaultData, SetDefaultError>>;
+export type SetDefaultData = void;
+export type SetDefaultError = "wallet_not_found";
+export type SetDefaultResult = Promise<Result<SetDefaultData, SetDefaultError>>;
 
 export const setDefault: Handler<SetDefaultParams, SetDefaultResult> = async ({
   label,

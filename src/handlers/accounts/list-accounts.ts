@@ -6,9 +6,9 @@ import {
 } from "../../accounts";
 import { fail, ok } from "../../utils/result";
 
-type ListAccountsParams = undefined;
-type ListAccountsData = Account<Keystore>[];
-type ListAccountsResult = Promise<Result<ListAccountsData>>;
+export type ListAccountsParams = undefined;
+export type ListAccountsData = Account<Keystore>[];
+export type ListAccountsResult = Promise<Result<ListAccountsData>>;
 
 export const listAccounts: Handler<
   ListAccountsParams,
