@@ -54,12 +54,11 @@ export const showBalances = async ({
   ui.newline();
 
   for (const { coinType, balance } of balances) {
-    const units = BigInt(balance);
     const decimals = coinTypes[coinType as keyof typeof coinTypes];
-    const amount = Number(units) / 10 ** decimals;
+    const amount = Number(balance) / 10 ** decimals;
     const symbol = coinType.split("::").at(-1) ?? coinType;
 
-    const display = units > 0n ? chalk.bold(amount) : chalk.dim("0");
+    const display = balance > 0n ? chalk.bold(amount) : chalk.dim("0");
     console.log(`  ${display} ${symbol}`);
   }
 };

@@ -51,7 +51,7 @@ export const getBalances: Handler<
 
     const balances = balancesResponse.map<Balance>(({ balance }) => ({
       coinType: balance.coinType as CoinType,
-      balance: balance.balance,
+      balance: BigInt(balance.balance),
     }));
 
     return ok({

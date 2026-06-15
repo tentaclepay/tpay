@@ -33,5 +33,5 @@ export type CoinType = `0x${string}::${string}::${string}`;
 
 export type Balance = {
   coinType: CoinType;
-  balance: string;
+  balance: bigint;
 };
