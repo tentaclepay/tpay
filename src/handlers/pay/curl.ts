@@ -6,7 +6,12 @@ import { ExactSuiScheme } from "@tentaclepay/sui-x402";
 import type { Handler } from "../../types";
 import type { Result, UnknownError } from "../../utils/result";
 import { getAccount, loadAccountConfig } from "../../accounts";
-import { MAINNET_CAIP2_NETWORKS, TESTNET_CAIP2_NETWORKS } from "../../constant";
+import {
+  MAINNET_CAIP2_NETWORKS,
+  MAINNET_COIN_TYPES_DECIMALS,
+  TESTNET_CAIP2_NETWORKS,
+  TESTNET_COIN_TYPES_DECIMALS,
+} from "../../constant";
 import {
   getHeader,
   isPassthroughMetadataRequest,
@@ -58,10 +63,15 @@ export const payWithCurl: Handler<
     if (args.some((arg) => PAYMENT_SIGNATURE_HEADER_RE.test(arg)))
       return fail("x402_payment_attempted");
 
+    let paymentContext: { amount: number; asset: string };
     const suiSigner = createSuiSigner(account, async (account) => {
       const verified = await promptVerification(
         account.keystore,
-        verificationReason.pay(label)
+        verificationReason.pay(
+          label,
+          paymentContext.amount,
+          paymentContext.asset
+        )
       );
       if (!verified) {
         lastError = "verification_failed";
@@ -86,6 +96,21 @@ export const payWithCurl: Handler<
     TESTNET_CAIP2_NETWORKS.map((network) =>
       x402Client.register(network, exactSuiScheme)
     );
+
+    x402Client.onBeforePaymentCreation(async ({ selectedRequirements }) => {
+      const coinDecimals =
+        selectedRequirements.network === "sui:mainnet"
+          ? MAINNET_COIN_TYPES_DECIMALS
+          : TESTNET_COIN_TYPES_DECIMALS;
+      const coinType = selectedRequirements.asset as keyof typeof coinDecimals;
+
+      paymentContext = {
+        amount:
+          Number(selectedRequirements.amount) /
+          10 ** (coinDecimals[coinType] ?? 0),
+        asset: coinType.split("::").at(-1) ?? coinType,
+      };
+    });
 
     const x402HttpClient = new x402HTTPClient(x402Client);
 

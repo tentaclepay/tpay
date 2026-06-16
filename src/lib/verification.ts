@@ -14,7 +14,8 @@ export const verificationReason = {
   save: (label: string) => `save the wallet "${label}" to your keychain`,
   export: (label: string) => `reveal the secret key for "${label}"`,
   remove: (label: string) => `remove the wallet "${label}" from your keychain`,
-  pay: (label: string) => `authorize a payment from your "${label}" wallet`,
+  pay: (label: string, amount: number, symbol: string) =>
+    `authorize a payment of ${amount} ${symbol} from your "${label}" wallet`,
 };
 
 export const promptVerification = async (
