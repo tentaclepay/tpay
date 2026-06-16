@@ -7,7 +7,7 @@ import {
   loadAccountConfig,
   validateAccountConfig,
 } from "./accounts";
-import { APP_NAME } from "./constant";
+import { APP_NAME, APP_VERSION } from "./constant";
 import * as ui from "./lib/ui";
 import { setState } from "./state";
 
@@ -18,7 +18,7 @@ const passThroughCommands = {
 const main = defineCommand({
   meta: {
     name: APP_NAME,
-    version: process.env.TPAY_VERSION ?? "0.1.0",
+    version: APP_VERSION,
     description: "Tentacle Pay Wallet — let your agents pay for APIs on Sui.",
   },
   args: {
@@ -73,6 +73,7 @@ const main = defineCommand({
   subCommands: {
     setup: () => import("./commands/setup").then((m) => m.setupCommand),
     account: () => import("./commands/accounts").then((m) => m.accountCommand),
+    mcp: () => import("./commands/mcp").then((m) => m.mcpCommand),
     ...passThroughCommands,
   },
 });
