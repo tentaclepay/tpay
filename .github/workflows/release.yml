@@ -27,7 +27,10 @@ jobs:
             target: bun-darwin-arm64
             asset: tpay-darwin-arm64
             ext: zip
-          - runner: macos-13
+          # Intel build cross-compiles on the free Apple Silicon runner;
+          # scripts/build.ts rebuilds the node-mac-auth addon for x64.
+          # (GitHub retired the macos-13 Intel runner.)
+          - runner: macos-14
             target: bun-darwin-x64
             asset: tpay-darwin-x64
             ext: zip
