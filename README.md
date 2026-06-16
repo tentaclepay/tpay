@@ -80,6 +80,8 @@ tpay curl https://api.weather.ai/forecast
 | --- | --- |
 | `tpay setup` | Create your first wallet and initialize tpay |
 | `tpay curl <args…>` | Run curl, settling any x402 payment automatically |
+| `tpay claude <args…>` | Run Claude with the active wallet wired in as an MCP server |
+| `tpay mcp` | Start an MCP server (stdio) exposing the active wallet to agents |
 | `tpay account` | Show the active wallet's balances |
 | `tpay account list` | List all wallets (alias: `ls`) |
 | `tpay account new <label>` | Create a new wallet |

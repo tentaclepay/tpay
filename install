@@ -207,8 +207,10 @@ echo
 info "${MUTED}installed to ${NC}${INSTALL_DIR}/${APP}"
 echo
 info "get started:"
-info "  ${PINK}tpay setup${NC}        ${MUTED}# create your first wallet${NC}"
-info "  ${PINK}tpay curl${NC} <url>   ${MUTED}# pay for x402 requests automatically${NC}"
+info "  ${PINK}tpay setup${NC}          ${MUTED}# create your first wallet${NC}"
+info "  ${PINK}tpay curl${NC} <url>     ${MUTED}# pay for x402 requests automatically${NC}"
+info "  ${PINK}tpay claude${NC} <args>  ${MUTED}# run Claude with your wallet as an MCP server${NC}"
+info "  ${PINK}tpay mcp${NC}            ${MUTED}# start an MCP server exposing your wallet${NC}"
 echo
 info "${MUTED}restart your shell or open a new terminal, then run ${NC}tpay setup"
 info "${MUTED}docs: ${NC}https://docs.tentaclepay.com"
