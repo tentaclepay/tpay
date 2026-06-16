@@ -3,8 +3,11 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "build:macos": "bun build --compile src/cli.ts --outfile ./out/macos/tpay --target=bun-darwin-arm64",
-    "build": "bun run build:macos",
+    "build": "bun run scripts/build.ts",
+    "build:darwin-arm64": "bun run scripts/build.ts --target bun-darwin-arm64 --outfile dist/tpay-darwin-arm64",
+    "build:darwin-x64": "bun run scripts/build.ts --target bun-darwin-x64 --outfile dist/tpay-darwin-x64",
+    "build:linux-x64": "bun run scripts/build.ts --target bun-linux-x64 --outfile dist/tpay-linux-x64",
+    "build:linux-arm64": "bun run scripts/build.ts --target bun-linux-arm64 --outfile dist/tpay-linux-arm64",
     "lint": "biome check ./src",
     "lint-staged": "biome check ./src --write --staged --files-ignore-unknown=true --no-errors-on-unmatched"
   },
@@ -22,8 +25,10 @@
     "@x402/core": "^2.15.0",
     "chalk": "^5.6.2",
     "citty": "^0.2.2",
-    "node-mac-auth": "^1.1.0",
     "parse-headers": "^2.0.6"
+  },
+  "optionalDependencies": {
+    "node-mac-auth": "^1.1.0"
   },
   "trustedDependencies": [
     "node-mac-auth"

@@ -18,7 +18,7 @@ const passThroughCommands = {
 const main = defineCommand({
   meta: {
     name: APP_NAME,
-    version: "0.1.0",
+    version: process.env.TPAY_VERSION ?? "0.1.0",
     description: "Tentacle Pay Wallet — let your agents pay for APIs on Sui.",
   },
   args: {

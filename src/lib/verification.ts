@@ -2,8 +2,33 @@ import { platform } from "node:os";
 
 import type { Keystore } from "../types";
 
-const { canPromptTouchID, promptTouchID } =
-  require("node-mac-auth/build/Release/auth.node") as typeof import("node-mac-auth/build/Release/auth.node");
+type MacAuth = typeof import("node-mac-auth/build/Release/auth.node");
+
+/**
+ * `node-mac-auth` is a macOS-only native addon (Touch ID). The require is gated
+ * on `process.env.TPAY_TARGET_OS`, which is inlined at build time via
+ * `--define` (see scripts/build.ts). On non-darwin builds the value is "linux",
+ * so Bun evaluates the branch to `false` and drops the require entirely — the
+ * addon is never installed nor loadable there. For `bun run` in dev the env var
+ * is unset and we fall back to the host platform.
+ */
+let macAuth: MacAuth | null = null;
+let macAuthLoaded = false;
+
+const loadMacAuth = (): MacAuth | null => {
+  if (macAuthLoaded) return macAuth;
+  macAuthLoaded = true;
+
+  if ((process.env.TPAY_TARGET_OS ?? platform()) === "darwin") {
+    try {
+      macAuth = require("node-mac-auth/build/Release/auth.node") as MacAuth;
+    } catch {
+      macAuth = null;
+    }
+  }
+
+  return macAuth;
+};
 
 /**
  * Reasons shown in the OS verification prompt (Touch ID on macOS). The system
@@ -24,10 +49,11 @@ export const promptVerification = async (
 ): Promise<boolean> => {
   switch (keystore) {
     case "platform": {
-      const os = platform();
+      const auth = loadMacAuth();
 
-      if (os === "darwin" && canPromptTouchID())
-        return promptTouchID({ reason: message })
+      if (auth?.canPromptTouchID())
+        return auth
+          .promptTouchID({ reason: message })
           .then(() => true)
           .catch(() => false);
 

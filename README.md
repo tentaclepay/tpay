@@ -48,6 +48,18 @@ HTTP/1.1 200 OK
 }
 ```
 
+## Install
+
+```sh
+curl -fsSL https://tentaclepay.com/install | bash
+```
+
+This installs the prebuilt binary for your platform — macOS (Apple Silicon & Intel) and Linux (x64 & arm64) — into `~/.tpay/bin` and adds it to your `PATH`. To pin a version, pass `--version`:
+
+```sh
+curl -fsSL https://tentaclepay.com/install | bash -s -- --version 0.1.0
+```
+
 ## Usage
 
 Set up your first wallet. This generates a key, stores it in your OS keychain, and makes it the active wallet:

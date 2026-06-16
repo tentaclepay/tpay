@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# tpay installer — downloads the prebuilt standalone binary from GitHub releases.
+#
+#   curl -fsSL https://raw.githubusercontent.com/tentaclepay/tpay/main/install | bash
+
+APP="tpay"
+REPO="tentaclepay/tpay"
+INSTALL_DIR="${TPAY_INSTALL_DIR:-$HOME/.tpay/bin}"
+
+MUTED='\033[0;2m'
+RED='\033[0;31m'
+PINK='\033[38;5;205m'
+NC='\033[0m'
+
+info() { echo -e "$1"; }
+error() {
+  echo -e "${RED}error:${NC} $1" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+tpay installer
+
+Usage: install [options]
+
+Options:
+  -h, --help               Show this help
+  -v, --version <version>  Install a specific version (e.g. 0.1.0)
+  -b, --binary <path>      Install from a local binary instead of downloading
+      --no-modify-path     Don't modify shell config files (.zshrc, .bashrc, …)
+
+Examples:
+  curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install | bash
+  curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install | bash -s -- --version 0.1.0
+EOF
+}
+
+requested_version="${VERSION:-}"
+no_modify_path=false
+binary_path=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -v | --version)
+      [[ -n "${2:-}" ]] || error "--version requires an argument"
+      requested_version="$2"
+      shift 2
+      ;;
+    -b | --binary)
+      [[ -n "${2:-}" ]] || error "--binary requires a path"
+      binary_path="$2"
+      shift 2
+      ;;
+    --no-modify-path)
+      no_modify_path=true
+      shift
+      ;;
+    *)
+      echo -e "${MUTED}warning: unknown option '$1'${NC}" >&2
+      shift
+      ;;
+  esac
+done
+
+detect_target() {
+  local os arch
+  case "$(uname -s)" in
+    Darwin*) os="darwin" ;;
+    Linux*) os="linux" ;;
+    *) error "unsupported OS: $(uname -s) (tpay supports macOS and Linux)" ;;
+  esac
+
+  case "$(uname -m)" in
+    arm64 | aarch64) arch="arm64" ;;
+    x86_64 | amd64) arch="x64" ;;
+    *) error "unsupported architecture: $(uname -m)" ;;
+  esac
+
+  # Apple Silicon under Rosetta reports x86_64 — prefer the native arm64 build.
+  if [[ "$os" == "darwin" && "$arch" == "x64" ]]; then
+    if [[ "$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)" == "1" ]]; then
+      arch="arm64"
+    fi
+  fi
+
+  echo "${os}-${arch}"
+}
+
+install_binary() {
+  local src="$1"
+  mkdir -p "$INSTALL_DIR"
+  cp "$src" "${INSTALL_DIR}/${APP}"
+  chmod 755 "${INSTALL_DIR}/${APP}"
+}
+
+if [[ -n "$binary_path" ]]; then
+  [[ -f "$binary_path" ]] || error "binary not found: $binary_path"
+  resolved_version="local"
+else
+  target="$(detect_target)"
+  os="${target%-*}"
+
+  ext="tar.gz"
+  [[ "$os" == "darwin" ]] && ext="zip"
+
+  if [[ "$os" == "darwin" ]]; then
+    command -v unzip >/dev/null 2>&1 || error "'unzip' is required but not installed"
+  else
+    command -v tar >/dev/null 2>&1 || error "'tar' is required but not installed"
+  fi
+
+  filename="${APP}-${target}.${ext}"
+
+  if [[ -z "$requested_version" ]]; then
+    url="https://github.com/${REPO}/releases/latest/download/${filename}"
+    resolved_version="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
+      sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p')"
+    [[ -n "$resolved_version" ]] ||
+      error "could not determine the latest version — see https://github.com/${REPO}/releases"
+  else
+    requested_version="${requested_version#v}"
+    resolved_version="$requested_version"
+    url="https://github.com/${REPO}/releases/download/v${resolved_version}/${filename}"
+    status="$(curl -sI -o /dev/null -w "%{http_code}" \
+      "https://github.com/${REPO}/releases/tag/v${resolved_version}")"
+    [[ "$status" != "404" ]] ||
+      error "release v${resolved_version} not found — see https://github.com/${REPO}/releases"
+  fi
+fi
+
+# Skip work if the requested version is already on PATH.
+if [[ -z "$binary_path" ]] && command -v "$APP" >/dev/null 2>&1; then
+  current="$("$APP" --version 2>/dev/null || echo "")"
+  if [[ -n "$current" && "$current" == "$resolved_version" ]]; then
+    info "${MUTED}${APP} ${NC}v${resolved_version}${MUTED} is already installed${NC}"
+    exit 0
+  fi
+fi
+
+if [[ -n "$binary_path" ]]; then
+  info "${MUTED}installing ${NC}${APP}${MUTED} from ${NC}${binary_path}"
+  install_binary "$binary_path"
+else
+  info "${MUTED}installing ${NC}${APP} v${resolved_version}${MUTED} for ${NC}${target}"
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "$tmp"' EXIT
+  curl -fL --progress-bar -o "${tmp}/${filename}" "$url" || error "download failed: $url"
+  if [[ "$ext" == "zip" ]]; then
+    unzip -q "${tmp}/${filename}" -d "$tmp"
+  else
+    tar -xzf "${tmp}/${filename}" -C "$tmp"
+  fi
+  [[ -f "${tmp}/${APP}" ]] || error "archive did not contain the ${APP} binary"
+  install_binary "${tmp}/${APP}"
+fi
+
+# --- PATH setup ------------------------------------------------------------
+
+add_to_path() {
+  local config_file="$1"
+  local line="$2"
+  mkdir -p "$(dirname "$config_file")"
+  touch "$config_file"
+  if grep -Fxq "$line" "$config_file" 2>/dev/null; then
+    return 0
+  fi
+  printf '\n# tpay\n%s\n' "$line" >>"$config_file"
+  info "${MUTED}added ${NC}${APP}${MUTED} to \$PATH in ${NC}${config_file}"
+}
+
+if [[ "$no_modify_path" == "false" && ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+  case "$(basename "${SHELL:-}")" in
+    fish)
+      add_to_path "$HOME/.config/fish/config.fish" "fish_add_path $INSTALL_DIR"
+      ;;
+    zsh)
+      add_to_path "${ZDOTDIR:-$HOME}/.zshrc" "export PATH=\"$INSTALL_DIR:\$PATH\""
+      ;;
+    bash)
+      bash_config="$HOME/.bashrc"
+      [[ ! -f "$bash_config" && -f "$HOME/.bash_profile" ]] && bash_config="$HOME/.bash_profile"
+      add_to_path "$bash_config" "export PATH=\"$INSTALL_DIR:\$PATH\""
+      ;;
+    *)
+      info "${MUTED}add ${APP} to your PATH:${NC}"
+      info "  export PATH=\"$INSTALL_DIR:\$PATH\""
+      ;;
+  esac
+fi
+
+if [[ "${GITHUB_ACTIONS:-}" == "true" && -n "${GITHUB_PATH:-}" ]]; then
+  echo "$INSTALL_DIR" >>"$GITHUB_PATH"
+fi
+
+# --- done ------------------------------------------------------------------
+
+echo
+info "${PINK}  tpay${NC} ${MUTED}— let your agents pay for APIs on Sui${NC}"
+echo
+info "${MUTED}installed to ${NC}${INSTALL_DIR}/${APP}"
+echo
+info "get started:"
+info "  ${PINK}tpay setup${NC}        ${MUTED}# create your first wallet${NC}"
+info "  ${PINK}tpay curl${NC} <url>   ${MUTED}# pay for x402 requests automatically${NC}"
+echo
+info "${MUTED}restart your shell or open a new terminal, then run ${NC}tpay setup"
+info "${MUTED}docs: ${NC}https://docs.tentaclepay.com"
+echo
