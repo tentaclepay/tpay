@@ -33,13 +33,13 @@ export type PayWithCurlError =
   | "x402_payment_attempted"
   | "failed_to_build_transaction"
   | "verification_failed";
-export type PayWIthCurlResult = Promise<
+export type PayWithCurlResult = Promise<
   Result<PayWithCurlData, PayWithCurlError>
 >;
 
 export const payWithCurl: Handler<
   PayWithCurlParams,
-  PayWIthCurlResult
+  PayWithCurlResult
 > = async ({ label, args }) => {
   if (isPassthroughMetadataRequest(args)) {
     Bun.spawn(["curl", ...args], {
@@ -132,11 +132,12 @@ export const payWithCurl: Handler<
         getHeader(headers)
       );
     } catch {
-      Bun.spawn(["curl", ...args], {
+      const proc = Bun.spawn(["curl", ...args], {
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",
       });
+      await proc.exited;
 
       return ok();
     }
@@ -175,11 +176,12 @@ export const payWithCurl: Handler<
 
     const curlWithPayment = ["curl", ...args, ...headerArgs];
 
-    Bun.spawn(curlWithPayment, {
+    const proc = Bun.spawn(curlWithPayment, {
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
     });
+    await proc.exited;
 
     return ok();
   } catch (err) {

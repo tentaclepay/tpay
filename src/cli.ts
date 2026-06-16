@@ -13,6 +13,7 @@ import { setState } from "./state";
 
 const passThroughCommands = {
   curl: () => import("./commands/curl").then((m) => m.curlCommand),
+  claude: () => import("./commands/claude").then((m) => m.claudeCommand),
 };
 
 const main = defineCommand({
