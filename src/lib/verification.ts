@@ -1,34 +1,14 @@
 import { platform } from "node:os";
 
 import type { Keystore } from "../types";
+import { keychainAuthenticate, keychainCanPrompt } from "./keystore/macos";
 
-type MacAuth = typeof import("node-mac-auth/build/Release/auth.node");
-
-/**
- * `node-mac-auth` is a macOS-only native addon (Touch ID). The require is gated
- * on `process.env.TPAY_TARGET_OS`, which is inlined at build time via
- * `--define` (see scripts/build.ts). On non-darwin builds the value is "linux",
- * so Bun evaluates the branch to `false` and drops the require entirely — the
- * addon is never installed nor loadable there. For `bun run` in dev the env var
- * is unset and we fall back to the host platform.
- */
-let macAuth: MacAuth | null = null;
-let macAuthLoaded = false;
-
-const loadMacAuth = (): MacAuth | null => {
-  if (macAuthLoaded) return macAuth;
-  macAuthLoaded = true;
-
-  if ((process.env.TPAY_TARGET_OS ?? platform()) === "darwin") {
-    try {
-      macAuth = require("node-mac-auth/build/Release/auth.node") as MacAuth;
-    } catch {
-      macAuth = null;
-    }
-  }
-
-  return macAuth;
-};
+// Touch ID on macOS runs inside the same signed helper that performs Keychain
+// I/O (see ./keystore/macos), so a single biometric prompt gates the operation
+// and the subsequent read is silent — no separate login-keychain password
+// dialog. On non-darwin builds the branch is dropped at build time via the
+// `TPAY_TARGET_OS` define; in dev the env var is unset and we use the host.
+const isDarwin = (process.env.TPAY_TARGET_OS ?? platform()) === "darwin";
 
 /**
  * Reasons shown in the OS verification prompt (Touch ID on macOS). The system
@@ -49,15 +29,13 @@ export const promptVerification = async (
 ): Promise<boolean> => {
   switch (keystore) {
     case "platform": {
-      const auth = loadMacAuth();
+      // Non-macOS, or a Mac without biometrics configured: nothing to prompt.
+      if (!isDarwin) return true;
+      if (!(await keychainCanPrompt().catch(() => false))) return true;
 
-      if (auth?.canPromptTouchID())
-        return auth
-          .promptTouchID({ reason: message })
-          .then(() => true)
-          .catch(() => false);
-
-      return true;
+      return keychainAuthenticate(message)
+        .then(() => true)
+        .catch(() => false);
     }
     default:
       return true;

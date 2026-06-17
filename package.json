@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun run scripts/build.ts",
+    "build:helper": "bun run scripts/build-helper.ts",
     "build:darwin-arm64": "bun run scripts/build.ts --target bun-darwin-arm64 --outfile dist/tpay-darwin-arm64",
     "build:darwin-x64": "bun run scripts/build.ts --target bun-darwin-x64 --outfile dist/tpay-darwin-x64",
     "build:linux-x64": "bun run scripts/build.ts --target bun-linux-x64 --outfile dist/tpay-linux-x64",
@@ -14,8 +15,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "24",
-    "node-gyp": "^11.0.0"
+    "@types/node": "24"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
@@ -30,11 +30,5 @@
     "chalk": "^5.6.2",
     "citty": "^0.2.2",
     "parse-headers": "^2.0.6"
-  },
-  "optionalDependencies": {
-    "node-mac-auth": "^1.1.0"
-  },
-  "trustedDependencies": [
-    "node-mac-auth"
-  ]
+  }
 }

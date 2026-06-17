@@ -6,6 +6,10 @@ out
 dist
 *.tgz
 
+# per-build embed copy (scripts/build.ts); the committed helper-{arm64,x64}
+# prebuilts are the source of truth and are NOT ignored.
+src/lib/keystore/macos/tpay-helper
+
 # code coverage
 coverage
 *.lcov
