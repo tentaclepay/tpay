@@ -21,20 +21,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # macOS archs build on native runners so node-gyp produces the
-          # correct-arch node-mac-auth addon, which the binary then embeds.
+          # macOS builds embed the COMMITTED, pre-signed helper-<arch>
+          # (src/lib/keystore/macos/) so the helper's code identity is stable
+          # across releases — no swiftc needed at release time. Regenerate with
+          # `bun run build:helper` only when helper.swift changes.
           - runner: macos-14
             target: bun-darwin-arm64
             asset: tpay-darwin-arm64
             ext: zip
-          # Intel build cross-compiles on the free Apple Silicon runner;
-          # scripts/build.ts rebuilds the node-mac-auth addon for x64.
-          # (GitHub retired the macos-13 Intel runner.)
+          # Intel build runs on the free Apple Silicon runner (GitHub retired
+          # the macos-13 Intel runner); it embeds the prebuilt x64 helper.
           - runner: macos-14
             target: bun-darwin-x64
             asset: tpay-darwin-x64
             ext: zip
-          # Linux has no native addon, so both archs cross-compile from x64.
+          # Linux uses Bun.secrets (libsecret), no native helper; cross-compile.
           - runner: ubuntu-latest
             target: bun-linux-x64
             asset: tpay-linux-x64

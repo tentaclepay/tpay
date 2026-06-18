@@ -23,7 +23,12 @@ import HELPER_SOURCE from "./helper.swift" with { type: "text" };
 import { CODESIGN, SWIFTC } from "./swift";
 
 const CACHE_DIR = join(CONFIG_DIR, "helper");
-const HELPER_BIN = join(CACHE_DIR, "tpay-helper");
+// The cached executable is named "tpay" on purpose: the helper is a bare
+// binary (no bundle/Info.plist), so LocalAuthentication shows its filename as
+// the app name in the Touch ID prompt. Naming it "tpay" makes the prompt read
+// `tpay is trying to …` instead of `tpay-helper`. The filename does not affect
+// Keychain trust (that's bound to the cdhash), so existing secrets still work.
+const HELPER_BIN = join(CACHE_DIR, "tpay");
 
 let readyHelper: Promise<string> | null = null;
 
