@@ -1,20 +1,20 @@
 import { x402Client as X402Client } from "@x402/core/client";
+import { ExactEvmScheme } from "@x402/evm";
 import { wrapFetchWithPayment } from "@x402/fetch";
 
 import { ExactSuiScheme } from "@tentaclepay/sui-x402";
 
-import type { Handler } from "../../types";
+import type { Account, Handler } from "../../types";
 import type { Result, UnknownError } from "../../utils/result";
 import { getAccount, loadAccountConfig } from "../../accounts";
 import {
   MAINNET_CAIP2_NETWORKS,
-  MAINNET_COIN_TYPES_DECIMALS,
   TESTNET_CAIP2_NETWORKS,
-  TESTNET_COIN_TYPES_DECIMALS,
+  TOKEN_METADATA,
 } from "../../constant";
-import { getKeystore } from "../../lib/keystore/platform";
-import { promptVerification, verificationReason } from "../../lib/verification";
-import { createSuiSigner } from "../../lib/x402";
+import { getVerifiedSecretKey } from "../../lib/secret-key";
+import { verificationReason } from "../../lib/verification";
+import { createEvmSigner, createSuiSigner } from "../../lib/x402";
 import { fail, ok } from "../../utils/result";
 
 export type PayWithFetchParams = {
@@ -60,53 +60,70 @@ export const payWithFetch: Handler<
     if (!account) return fail("wallet_not_found");
 
     let paymentContext: { amount: number; asset: string };
-    const suiSigner = createSuiSigner(account, async (account) => {
-      const verified = await promptVerification(
-        account.keystore,
-        paymentContext
-          ? verificationReason.pay(
-              label,
-              paymentContext.amount,
-              paymentContext.asset
-            )
-          : `authorize a payment from your "${label}" wallet`
-      );
-      if (!verified) {
-        lastError = "verification_failed";
-        throw lastError;
+    const getSecretKey = async (account: Account) => {
+      try {
+        return await getVerifiedSecretKey(
+          account,
+          paymentContext
+            ? verificationReason.pay(
+                label,
+                paymentContext.amount,
+                paymentContext.asset
+              )
+            : `authorize a payment from your "${label}" wallet`
+        );
+      } catch (err) {
+        lastError = err as PayWithFetchError;
+        throw err;
       }
+    };
 
-      const secretKey = await getKeystore(account.label);
-      if (!secretKey) {
-        lastError = "wallet_not_found";
-        throw lastError;
-      }
-
-      return secretKey;
-    });
+    const suiSigner = createSuiSigner(account, getSecretKey);
+    const evmSigner = createEvmSigner(account, getSecretKey);
 
     const exactSuiScheme = new ExactSuiScheme(suiSigner);
+    const exactEvmScheme = new ExactEvmScheme(evmSigner);
 
     const x402Client = new X402Client();
-    MAINNET_CAIP2_NETWORKS.map((network) =>
-      x402Client.register(network, exactSuiScheme)
-    );
-    TESTNET_CAIP2_NETWORKS.map((network) =>
-      x402Client.register(network, exactSuiScheme)
-    );
+    MAINNET_CAIP2_NETWORKS.forEach((network) => {
+      network.startsWith("sui:")
+        ? x402Client.register(network, exactSuiScheme)
+        : undefined;
+
+      network.startsWith("eip155:")
+        ? x402Client.register(network, exactEvmScheme)
+        : undefined;
+    });
+    TESTNET_CAIP2_NETWORKS.forEach((network) => {
+      network.startsWith("sui:")
+        ? x402Client.register(network, exactSuiScheme)
+        : undefined;
+
+      network.startsWith("eip155:")
+        ? x402Client.register(network, exactEvmScheme)
+        : undefined;
+    });
 
     x402Client.onBeforePaymentCreation(async ({ selectedRequirements }) => {
-      const coinDecimals =
-        selectedRequirements.network === "sui:mainnet"
-          ? MAINNET_COIN_TYPES_DECIMALS
-          : TESTNET_COIN_TYPES_DECIMALS;
-      const coinType = selectedRequirements.asset as keyof typeof coinDecimals;
+      const networkTokens =
+        TOKEN_METADATA[
+          selectedRequirements.network as keyof typeof TOKEN_METADATA
+        ];
+      if (!networkTokens) return;
+
+      const tokenMetadata =
+        networkTokens[
+          (selectedRequirements.network.startsWith("sui:")
+            ? selectedRequirements.asset
+            : selectedRequirements.asset.toLowerCase()) as keyof typeof networkTokens
+        ];
+      if (!tokenMetadata) return;
 
       paymentContext = {
         amount:
           Number(selectedRequirements.amount) /
-          10 ** (coinDecimals[coinType] ?? 0),
-        asset: coinType.split("::").at(-1) ?? coinType,
+          10 ** (tokenMetadata.decimals ?? 0),
+        asset: tokenMetadata.symbol,
       };
     });
 
