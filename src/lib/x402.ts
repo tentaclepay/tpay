@@ -29,7 +29,7 @@ export const createEvmSigner = (
   account: Account,
   getSecretKey: (account: Account) => Promise<string>
 ): ClientEvmSigner => {
-  const verifierUrl = "http://localhost:8787";
+  const verifierUrl = "http://testnet-verifier.tentaclepay.com";
 
   const suiClient = new SuiGrpcClient({
     network: "testnet",
