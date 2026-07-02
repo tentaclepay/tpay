@@ -81,7 +81,7 @@ export const payWithCurl: Handler<
     };
 
     const suiSigner = createSuiSigner(account, getSecretKey);
-    const evmSigner = createEvmSigner(account, getSecretKey);
+    const evmSigner = await createEvmSigner(account, getSecretKey);
 
     const exactSuiScheme = new ExactSuiScheme(suiSigner);
     const exactEvmScheme = new ExactEvmScheme(evmSigner);

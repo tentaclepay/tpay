@@ -9,7 +9,7 @@
         "@ika.xyz/sdk": "^0.4.1",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@mysten/sui": "^2.17.0",
-        "@tentaclepay/sdk": "^0.0.9",
+        "@tentaclepay/sdk": "^0.0.11",
         "@tentaclepay/sui-x402": "^2.1.12",
         "@x402/core": "^2.15.0",
         "@x402/evm": "^2.16.0",
@@ -90,7 +90,7 @@
 
     "@scure/bip39": ["@scure/bip39@2.2.0", "", { "dependencies": { "@noble/hashes": "2.2.0", "@scure/base": "2.2.0" } }, "sha512-T/Bj/YvYMNkIPq6EENO6/rcs2e7qTNuyoUXf0KBFDmp0ZDu0H2X4Lq6yC3i0c8PcWkov5EbW+yQZZbdMmk154A=="],
 
-    "@tentaclepay/sdk": ["@tentaclepay/sdk@0.0.9", "", { "dependencies": { "@noble/curves": "^2.2.0", "@noble/hashes": "^2.2.0", "@x402/evm": "^2.15.0", "viem": "^2.52.2", "zod": "^4.4.3" }, "peerDependencies": { "@ika.xyz/sdk": "^0.4.1", "@mysten/sui": "^2.17.0" } }, "sha512-Jf9R20VXoX4fL6fzOa0juiRZRJBNY3ete50rdy9ai8NELKAP8dkwyqjhIufEgnIpf/Wdb+FnLRshibZR57r3PA=="],
+    "@tentaclepay/sdk": ["@tentaclepay/sdk@0.0.11", "", { "dependencies": { "@x402/evm": "^2.15.0", "viem": "^2.52.2", "zod": "^4.4.3" }, "peerDependencies": { "@mysten/sui": "^2.17.0" } }, "sha512-TG/kr1Zn6xuwocRn6nz4XlTX6bhyVOzcUwyaxHp/hZC8sg3NYtjUITW86aMuvlF+29A9EW9qM1Ie34a5a7nF7A=="],
 
     "@tentaclepay/sui-x402": ["@tentaclepay/sui-x402@2.1.12", "", { "dependencies": { "@x402/core": "2.12.0" }, "peerDependencies": { "@mysten/sui": "^2.17.0" } }, "sha512-Dy1/kE27fc12iFXEuDBzhGV046QZg0kFECDB0TMss94jV9bKu66g2VmJiAARc4f7ydnzE5zmqLKWnnHsYP4gbg=="],
 
