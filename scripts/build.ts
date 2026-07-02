@@ -44,7 +44,11 @@ const { values } = parseArgs({
 
 const target = values.target ?? `bun-${HOST_OS}-${HOST_ARCH}`;
 const outfile = values.outfile ?? "dist/tpay";
-const version = values.version ?? process.env.TPAY_VERSION ?? "0.1.1";
+const version =
+  values.version ??
+  process.env.TPAY_VERSION ??
+  process.env.npm_package_version ??
+  "0.0.0";
 
 // process.platform-style value ("darwin" | "linux" | "win32"), used to gate the
 // macOS Keychain helper at build time inside the keystore/verification modules.

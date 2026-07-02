@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { SUI_DECIMALS } from "@mysten/sui/utils";
 
 export const APP_NAME = "tpay";
-export const APP_VERSION = process.env.TPAY_VERSION ?? "0.1.1";
+export const APP_VERSION = `${process.env.TPAY_VERSION ?? process.env.npm_package_version ?? "0.0.0"}${process.env.NODE_ENV === "production" ? "" : "-dev"}`;
 
 export const CONFIG_DIR = process.env.TPAY_HOME ?? join(homedir(), ".tpay");
 export const ACCOUNT_CONFIG_FILE_PATH = join(CONFIG_DIR, "accounts.yaml");
