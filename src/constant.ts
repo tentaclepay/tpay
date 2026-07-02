@@ -49,5 +49,37 @@ export const TESTNET_COIN_TYPES_DECIMALS = {
   [USDC_TESTNET_COIN_TYPE]: USDC_DECIMALS,
 } as const;
 
-export const MAINNET_CAIP2_NETWORKS = ["sui:mainnet"] as const;
-export const TESTNET_CAIP2_NETWORKS = ["sui:testnet"] as const;
+export const MAINNET_CAIP2_NETWORKS = ["sui:mainnet", "eip155:84532"] as const;
+export const TESTNET_CAIP2_NETWORKS = ["sui:testnet", "eip155:84532"] as const;
+
+export const TOKEN_METADATA: Record<
+  string,
+  Record<string, { symbol: string; decimals: number }>
+> = {
+  "sui:mainnet": {
+    [SUI_COIN_TYPE]: {
+      symbol: "SUI",
+      decimals: SUI_DECIMALS,
+    },
+    [USDC_MAINNET_COIN_TYPE]: {
+      symbol: "USDC",
+      decimals: USDC_DECIMALS,
+    },
+  },
+  "sui:testnet": {
+    [SUI_COIN_TYPE]: {
+      symbol: "SUI",
+      decimals: SUI_DECIMALS,
+    },
+    [USDC_TESTNET_COIN_TYPE]: {
+      symbol: "USDC",
+      decimals: USDC_DECIMALS,
+    },
+  },
+  "eip155:84532": {
+    "0x036cbd53842c5426634e7929541ec2318f3dcf7e": {
+      symbol: "USDC",
+      decimals: 6,
+    },
+  },
+};
